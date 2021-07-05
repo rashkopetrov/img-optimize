@@ -6,7 +6,6 @@
 -   optipng for png optimization
 -   cwebp for WebP conversion
 -   go-avif for Avif conversion
--   libaom-dev required by go-avif
 
 ## Prerequisite Installation
 

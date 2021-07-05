@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # ==========================================================================
 	# Variables
@@ -22,69 +22,89 @@ YELLOW="\033[1;33m"
 	# Helpers
 # ==========================================================================
 
-function printText() {
+newLine() {
+	printf "\n"
+}
+
+printText() {
 	printf "$1\n"
 }
 
-function printAlert() {
-	printf "${RED}---------------------${NC}\n"
+printTextSep() {
+	printf "---------------------\n"
+}
+
+printAlert() {
 	printf "${RED}$1${NC}\n"
+}
+
+printAlertSep() {
 	printf "${RED}---------------------${NC}\n"
 }
 
-function printNotice() {
-	printf "${YELLOW}---------------------${NC}\n"
+printNotice() {
 	printf "${YELLOW}$1${NC}\n"
+}
+
+printNoticeSep() {
 	printf "${YELLOW}---------------------${NC}\n"
 }
 
-function printSuccess() {
-	printf "${GREEN}---------------------${NC}\n"
+printSuccess() {
 	printf "${GREEN}$1${NC}\n"
+}
+
+printSuccessSep() {
 	printf "${GREEN}---------------------${NC}\n"
 }
 
 printHelp() {
 	printText "optimize v$VERSION  Copyright (c) 2021, Rashko Petrov"
 	printText ""
-    printText "Usage: optimize [OPTIONS].... [PATH]"
-    printText "Optimize/Compress images size quality and size."
+	printText "Usage: optimize [OPTIONS].... [PATH]"
+	printText "Optimize/Compress images quality and size."
 	printText ""
-    printText "Options:"
+	printText "Options:"
 	printText ""
-    printText "           --jpg                 Optimize the jpg images."
-    printText "           --jpg-to-webp         Convert the jpg images in webp but keeps the original files."
-    printText "           --jpg-to-avif         Convert the jpg images in avif but keeps the original files."
-    printText "           --png                 Optimize all png images."
-	printText "           --png-to-webp         Convert the png images in webp but keeps the original files."
-    printText "           --png-to-avif         Convert the png images in avif but keeps the original files."
-	printText "           --cmin [+|-]<n>       File's status was last changed n minutes ago."
-	printText "  -q,      --quiet               Run optimization quietly."
-	printText "  -s,      --strip-markers       Strip metadata when optimizing jpg/png images."
-	printText "  -o <ol>, --optimization-level  Optimization level (0-7) [default: 2]."
-    printText "  -a,      --all                 Optimize and convert all jpg/png images to webp/avif."
-    printText "  -p,      --path <images path>  Define images path [default: current directory]."
-	printText "  -v,      --version             Print version information and quit."
-    printText ""
-    printText "Examples:"
+	printText "           --jpg                        Optimize the jpg images."
+	printText "           --jpg-to-webp                Convert the jpg images in webp but keeps the original files."
+	printText "           --jpg-to-avif                Convert the jpg images in avif but keeps the original files."
+	printText "           --jpg-optimization-lvl <ol>  Overrides the global optimization level."
+	printText ""
+	printText "           --png                        Optimize all png images."
+	printText "           --png-to-webp                Convert the png images in webp but keeps the original files."
+	printText "           --png-to-avif                Convert the png images in avif but keeps the original files."
+	printText "           --png-optimization-lvl <ol>  Overrides the global optimization level."
+	printText ""
+	printText "           --cmin [+|-]<n>              File's status was last changed n minutes ago."
+	printText "  -q,      --quiet                      Run optimization quietly."
+	printText "  -s,      --strip-markers              Strip metadata when optimizing jpg/png images."
+	printText "  -o <ol>, --optimization-lvl <ol>      Optimization level (0-7) [default: 2]."
+	printText "  -a,      --all                        Optimize and convert all jpg/png images to webp/avif."
+	printText "  -p,      --path <images path>         Define images path [default: current directory]."
+	printText "  -v,      --version                    Print version information and quit."
+	printText ""
+	printText "Examples:"
 	printText "  optimize              Prints the help text"
-    printText "  optimize --png --jpg  Optimizes all png and jpg in current durectory"
-    return 0
+	printText "  optimize --png --jpg  Optimizes all png and jpg in current durectory"
+	return 0
 }
 
 # ==========================================================================
 	# Functions
 # ==========================================================================
 
-function run() {
+run() {
 	if [ "${#}" = "0" ]; then
+		printAlertSep
 		printAlert "optimize: arguments missing"
 		printAlert "Try 'optimize --help' for more information."
+		printAlertSep
 		exit 1
 	fi
 
 	preventMultiExecutionOnSameDirectory
-	parseArgs
+	parseArgs "$@"
 
 	cd $TARGET_DIR || exit 1
 
@@ -98,18 +118,39 @@ function run() {
 	printText ""
 }
 
-function preventMultiExecutionOnSameDirectory() {
+preventMultiExecutionOnSameDirectory() {
 	LOCK_FILE=$(echo -n "$TARGET_DIR" | md5sum | cut -d" " -f1)
 
 	if [ -f "/tmp/$LOCK_FILE" ]; then
-		echo "$TARGET_DIR yet in progress"
-		exit 1
+		printAlertSep
+		printAlert "The script is currently processing the given path:"
+		printAlert "    :$TARGET_DIR"
+		printAlertSep
+
+		printNotice "The script creates file that indicates it's running."
+		printNotice "This is necessary in order to prevent multiple executions in the same directory."
+		printNotice "In case the script crashes or is manually interrupted, you can reset the script status."
+		printNotice "Would you like to reset the script status and proceed with current execution?"
+		printf "${YELLOW}"
+		read -p "=> [Yy] to confirm: " -n 1 -r USER_CONFIRMATION
+		printf "${NC}"
+
+		if [[ $USER_CONFIRMATION =~ ^[Yy]$ ]]; then
+			rm "/tmp/$LOCK_FILE"
+			printNotice "The script status has been reset."
+			printTextSep
+		fi
+
+		if [[ ! $USER_CONFIRMATION =~ ^[Yy]$ ]]; then
+			newLine
+			exit 1
+		fi
 	fi
 
 	touch "/tmp/$LOCK_FILE"
 }
 
-function parseArgs() {
+parseArgs() {
 	while [ "$#" -gt 0 ]; do
 		case "$1" in
 			--jpg)
@@ -124,6 +165,19 @@ function parseArgs() {
 				JPG_TO_AVIF="y"
 			;;
 
+			--jpg-optimization-lvl)
+				if [ -n "$2" ] && [ "$2" -ge 0 ] && [ "$2" -le 7 ]; then
+					JPG_OPTIMIZATION_QUALITY=$(((8 - $2) * 14))
+					if [ "$JPG_OPTIMIZATION_QUALITY" -ge 100 ]; then
+						JPG_OPTIMIZATION_QUALITY=100
+					fi
+
+					JPG_OPTIMIZATION_ARGS+=" -m$JPG_OPTIMIZATION_QUALITY"
+					JPG_OPTIMIZATION_LVL_OVERRIDE="y"
+					shift
+				fi
+			;;
+
 			--png)
 				PNG_OPTIMIZATION="y"
 			;;
@@ -134,6 +188,14 @@ function parseArgs() {
 
 			--png-to-avif)
 				PNG_TO_AVIF="y"
+			;;
+
+			--png-optimization-lvl)
+				if [ -n "$2" ] && [ "$2" -ge 0 ] && [ "$2" -le 7 ]; then
+					PNG_OPTIMIZATION_ARGS+=" -o$2"
+					PNG_OPTIMIZATION_LVL_OVERRIDE="y"
+					shift
+				fi
 			;;
 
 			--cmin)
@@ -158,13 +220,19 @@ function parseArgs() {
 				if [ -n "$2" ] && [ "$2" -ge 0 ] && [ "$2" -le 7 ]; then
 					OPTIMIZATION_LEVEL="y"
 
-					PNG_OPTIMIZATION_LEVEL=$(((8 - $2) * 14))
-					if [ "$PNG_OPTIMIZATION_LEVEL" -ge 100 ]; then
-						PNG_OPTIMIZATION_LEVEL=100
+					if [ $PNG_OPTIMIZATION_LVL_OVERRIDE != 'y' ]; then
+						PNG_OPTIMIZATION_ARGS+=" -o$2"
 					fi
 
-					PNG_OPTIMIZATION_ARGS+=" -o$2"
-					JPG_OPTIMIZATION_ARGS+=" -m$PNG_OPTIMIZATION_LEVEL"
+					if [ $JPG_OPTIMIZATION_LVL_OVERRIDE != 'y' ]; then
+						JPG_OPTIMIZATION_QUALITY=$(((8 - $2) * 14))
+						if [ "$JPG_OPTIMIZATION_QUALITY" -ge 100 ]; then
+							JPG_OPTIMIZATION_QUALITY=100
+						fi
+
+						JPG_OPTIMIZATION_ARGS+=" -m$JPG_OPTIMIZATION_QUALITY"
+					fi
+
 					shift
 				fi
 			;;
@@ -200,7 +268,7 @@ function parseArgs() {
 	done
 }
 
-function optimizeImages () {
+optimizeImages () {
 	if [ $OPTIMIZATION_LEVEL != 'y' ]; then
 		PNG_OPTIMIZATION_ARGS+=" -o2"
 		JPG_OPTIMIZATION_ARGS+=" -m82"
@@ -223,37 +291,37 @@ function optimizeImages () {
 	fi
 }
 
-function convertImagesToWebp () {
+convertImagesToWebp () {
 	[ -z "$(command -v cwebp)" ] && {
-        printAlert "Error: cwebp isn't installed"
-        exit 1
-    }
+		printAlert "Error: cwebp isn't installed"
+		exit 1
+	}
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_WEBP" = "y" ]]; then
 		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -0 -r -I {} \
-            bash -c "[ ! -f '{}.webp' ] && { cwebp $CWEBP_ARGS -q 82 -mt '{}' -o '{}.webp' || rm -f '{}.webp'; }"
+			bash -c "[ ! -f '{}.webp' ] && { cwebp $CWEBP_ARGS -q 82 -mt '{}' -o '{}.webp' || rm -f '{}.webp'; }"
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_TO_WEBP" = "y" ]]; then
 		find . -type f -iname "*.png" $FIND_ARGS -print0 | xargs -0 -r -I {} \
-            bash -c "[ ! -f '{}.webp' ] && { cwebp $CWEBP_ARGS -z 9 -mt '{}' -o '{}.webp'; }"
+			bash -c "[ ! -f '{}.webp' ] && { cwebp $CWEBP_ARGS -z 9 -mt '{}' -o '{}.webp'; }"
 	fi
 }
 
-function convertImagesToAvif () {
+convertImagesToAvif () {
 	[ -z "$(command -v avif)" ] && {
-        printAlert "Error: avif isn't installed"
-        exit 1
-    }
+		printAlert "Error: avif isn't installed"
+		exit 1
+	}
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_AVIF" = "y" ]]; then
 		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -0 -r -I {} \
-            bash -c "[ ! -f '{}.avif' ] && { avif -e '{}' -o '{}.avif' || rm -f '{}.avif'; }"
+			bash -c "[ ! -f '{}.avif' ] && { avif -e '{}' -o '{}.avif' || rm -f '{}.avif'; }"
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_TO_AVIF" = "y" ]]; then
 		find . -type f -iname "*.png" $FIND_ARGS -print0 | xargs -0 -r -I {} \
-            bash -c "[ ! -f '{}.avif' ] && { avif -e '{}' -o '{}.avif' || rm -f '{}.avif'; }"
+			bash -c "[ ! -f '{}.avif' ] && { avif -e '{}' -o '{}.avif' || rm -f '{}.avif'; }"
 	fi
 }
 
@@ -261,5 +329,5 @@ function convertImagesToAvif () {
 	# INIT
 # ==========================================================================
 
-run
+run "$@"
 exit 1
