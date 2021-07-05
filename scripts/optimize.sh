@@ -1,4 +1,17 @@
 #!/bin/bash
+# ##########################################################################
+# Title           :Img Optimize
+# Description     :This script optimizes the images quality and size.
+# Author          :Rashko Petrov
+# Website         :https://rashkopetrov.dev
+# GitHub          :https://github.com/rashkopetrov/img-optimize
+# Date            :2021-06-24
+# Version         :0.21.06.24 - 2021-06-24
+# Usage		      :bash optimize.sh
+# BashVersion     :Tested with 4.4.12
+# License         :MIT License
+#                 :Copyright (c) 2021 Rashko Petrov
+# ##########################################################################
 
 # ==========================================================================
 	# Variables
@@ -19,46 +32,46 @@ GREEN="\033[0;32m"
 YELLOW="\033[1;33m"
 
 # ==========================================================================
-	# Helpers
+	# Helpers/Utils
 # ==========================================================================
 
-newLine() {
+newLine () {
 	printf "\n"
 }
 
-printText() {
+printText () {
 	printf "$1\n"
 }
 
-printTextSep() {
+printTextSep () {
 	printf "---------------------\n"
 }
 
-printAlert() {
+printAlert () {
 	printf "${RED}$1${NC}\n"
 }
 
-printAlertSep() {
+printAlertSep () {
 	printf "${RED}---------------------${NC}\n"
 }
 
-printNotice() {
+printNotice () {
 	printf "${YELLOW}$1${NC}\n"
 }
 
-printNoticeSep() {
+printNoticeSep () {
 	printf "${YELLOW}---------------------${NC}\n"
 }
 
-printSuccess() {
+printSuccess () {
 	printf "${GREEN}$1${NC}\n"
 }
 
-printSuccessSep() {
+printSuccessSep () {
 	printf "${GREEN}---------------------${NC}\n"
 }
 
-printHelp() {
+printHelp () {
 	printText "optimize v$VERSION  Copyright (c) 2021, Rashko Petrov"
 	printText ""
 	printText "Usage: optimize [OPTIONS].... [PATH]"
@@ -94,7 +107,7 @@ printHelp() {
 	# Functions
 # ==========================================================================
 
-run() {
+run () {
 	if [ "${#}" = "0" ]; then
 		printAlertSep
 		printAlert "optimize: arguments missing"
@@ -118,7 +131,7 @@ run() {
 	printText ""
 }
 
-preventMultiExecutionOnSameDirectory() {
+preventMultiExecutionOnSameDirectory () {
 	LOCK_FILE=$(echo -n "$TARGET_DIR" | md5sum | cut -d" " -f1)
 
 	if [ -f "/tmp/$LOCK_FILE" ]; then
@@ -150,7 +163,7 @@ preventMultiExecutionOnSameDirectory() {
 	touch "/tmp/$LOCK_FILE"
 }
 
-parseArgs() {
+parseArgs () {
 	while [ "$#" -gt 0 ]; do
 		case "$1" in
 			--jpg)
