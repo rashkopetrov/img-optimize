@@ -72,6 +72,13 @@ printSuccessSep () {
 	printf "${GREEN}---------------------${NC}\n"
 }
 
+commandRequired () {
+	[ -z "$(command -v $1)" ] && {
+		printAlert "Error: $1 isn't installed"
+		exit 1
+	}
+}
+
 printHelp () {
 	printText "optimize v$VERSION  Copyright (c) 2021, Rashko Petrov"
 	printText ""
@@ -106,7 +113,7 @@ printHelp () {
 }
 
 # ==========================================================================
-	# Functions
+	# Implementation
 # ==========================================================================
 
 run () {
@@ -301,27 +308,20 @@ optimizeImages () {
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_OPTIMIZATION" = "y" ]]; then
-		[ -z "$(command -v jpegoptim)" ] && {
-			printAlert "Error: jpegoptim isn't installed"
-		}
+		commandRequired "jpegoptim"
 
 		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -r -0 jpegoptim $JPG_OPTIMIZATION_ARGS
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_OPTIMIZATION" = "y" ]]; then
-		[ -z "$(command -v optipng)" ] && {
-			printAlert "Error: optipng isn't installed"
-		}
+		commandRequired "optipng"
 
 		find . -type f -iname '*.png' $FIND_ARGS -print0 | xargs -r -0 optipng $PNG_OPTIMIZATION_ARGS
 	fi
 }
 
 convertImagesToWebp () {
-	[ -z "$(command -v cwebp)" ] && {
-		printAlert "Error: cwebp isn't installed"
-		exit 1
-	}
+	commandRequired "cwebp"
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_WEBP" = "y" ]]; then
 		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -0 -r -I {} \
@@ -335,10 +335,7 @@ convertImagesToWebp () {
 }
 
 convertImagesToAvif () {
-	[ -z "$(command -v avif)" ] && {
-		printAlert "Error: avif isn't installed"
-		exit 1
-	}
+	commandRequired "avif"
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_AVIF" = "y" ]]; then
 		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -0 -r -I {} \
