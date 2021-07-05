@@ -5,6 +5,7 @@
 # Author          :Rashko Petrov
 # Website         :https://rashkopetrov.dev
 # GitHub          :https://github.com/rashkopetrov/img-optimize
+# DockerHub       :https://hub.docker.com/repository/docker/rashkopetrovdev/img-optimize
 # Date            :2021-06-24
 # Version         :0.21.06.24 - 2021-06-24
 # Usage		      :bash optimize.sh
@@ -96,6 +97,7 @@ printHelp () {
 	printText "  -a,      --all                        Optimize and convert all jpg/png images to webp/avif."
 	printText "  -p,      --path <images path>         Define images path [default: current directory]."
 	printText "  -v,      --version                    Print version information and quit."
+	printText "  -u,      --check-for-update           Check for updates."
 	printText ""
 	printText "Examples:"
 	printText "  optimize              Prints the help text"
@@ -161,6 +163,12 @@ preventMultiExecutionOnSameDirectory () {
 	fi
 
 	touch "/tmp/$LOCK_FILE"
+}
+
+checkForUpdates () {
+	printNoticeSep
+	printNotice "Check for update is not implemented yet."
+	printNoticeSep
 }
 
 parseArgs () {
@@ -268,6 +276,11 @@ parseArgs () {
 
 			-v | --version)
 				printText $VERSION
+				exit 1
+			;;
+
+			-u | --check-for-update)
+				checkForUpdates
 				exit 1
 			;;
 		*)

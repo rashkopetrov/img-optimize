@@ -5,16 +5,9 @@ export DEBIAN_FRONTEND=noninteractive
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
-if [[ $UID != 0 ]]; then
-	echo "Please run this script with sudo:"
-	# echo "sudo $0 $*"
-	echo "sudo $*"
-	exit
-fi
+apt-get update
 
-apt update
-
-apt -y install \
+apt-get -y install \
     curl \
     jpegoptim \
     optipng \
