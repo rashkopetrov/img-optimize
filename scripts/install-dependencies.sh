@@ -7,7 +7,12 @@ export LANG=C.UTF-8
 
 apt update
 
-apt -y install curl jpegoptim optipng webp
+apt -y install \
+    curl \
+    jpegoptim \
+    optipng \
+    webp \
+    libaom-dev
 
 curl -L -o /usr/local/bin/avif https://github.com/Kagami/go-avif/releases/download/v0.1.0/avif-linux-x64
 chmod +x /usr/local/bin/avif
