@@ -39,7 +39,7 @@ git clone https://github.com/rashkopetrov/img-optimize.git $HOME/.img-optimize
 
 **Method 1** : Add an alias in .bashrc
 
-With this method img-optimize can only be used by the current user
+With this method img-optimize can only be used by the current user.
 
 ```bash
 echo "alias img-optimize=$HOME/.img-optimize/optimize.sh" >> $HOME/.bashrc
@@ -58,7 +58,7 @@ rm -rf $HOME/.img-optimize
 
 **Method 3** : Add an alias to the script in /usr/local/bin
 
-With this method img-optimize can be used by all users
+With this method img-optimize can be used by all users.
 
 ```bash
 sudo ln -s $HOME/.img-optimize/optimize.sh /usr/local/bin/img-optimize

@@ -1,6 +1,6 @@
 FROM debian:stretch-slim
 
-COPY ./scripts/install-dependencies.sh /root/install-dependencies.sh
+COPY ../scripts/install-dependencies.sh /root/install-dependencies.sh
 RUN chmod +x /root/install-dependencies.sh && \
 	/root/install-dependencies.sh && \
 	rm /root/install-dependencies.sh
