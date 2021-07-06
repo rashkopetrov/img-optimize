@@ -1,40 +1,40 @@
 #!/bin/bash
-# ##########################################################################
+# ###########################################
 # Title           :Img Optimize
 # Description     :This script optimizes the images quality and size.
 # Author          :Rashko Petrov
 # Website         :https://rashkopetrov.dev
 # GitHub          :https://github.com/rashkopetrov/img-optimize
-# DockerHub       :https://hub.docker.com/repository/docker/rashkopetrovdev/img-optimize
+# DockerHub       :https://hub.docker.com/r/rashkopetrovdev/img-optimize
 # Date            :2021-06-24
 # Version         :0.21.06.24 - 2021-06-24
 # Usage		      :bash optimize.sh
 # BashVersion     :Tested with 4.4.12
 # License         :MIT License
 #                 :Copyright (c) 2021 Rashko Petrov
-# ##########################################################################
+# ###########################################
 
-# ==========================================================================
+# ===========================================
 	# Variables
-# ==========================================================================
+# ===========================================
 
 # majorVersion.year.month.day
 VERSION="0.21.06.24"
 
 TARGET_DIR="$PWD"
 FIND_ARGS=""
-CWEBP_ARGS=""
-PNG_OPTIMIZATION_ARGS=""
-JPG_OPTIMIZATION_ARGS="-p --all-progressive"
+CWEBP_ARGS="  -quiet"
+PNG_OPTIMIZATION_ARGS="  -quiet"
+JPG_OPTIMIZATION_ARGS="-p --all-progressive --overwrite --quiet"
 
 NC="\033[0m" # No Colo
 RED="\033[0;31m"
 GREEN="\033[0;32m"
 YELLOW="\033[1;33m"
 
-# ==========================================================================
+# ===========================================
 	# Helpers/Utils
-# ==========================================================================
+# ===========================================
 
 newLine () {
 	printf "\n"
@@ -45,7 +45,7 @@ printText () {
 }
 
 printTextSep () {
-	printf "---------------------\n"
+	printf "${NC}---------------------\n"
 }
 
 printAlert () {
@@ -79,9 +79,12 @@ commandRequired () {
 	}
 }
 
-printHelp () {
-	printText "optimize v$VERSION  Copyright (c) 2021, Rashko Petrov"
+printCopyright () {
+	printText "Optimize v$VERSION Copyright (c) 2021, Rashko Petrov"
 	printText ""
+}
+
+printHelp () {
 	printText "Usage: optimize [OPTIONS].... [PATH]"
 	printText "Optimize/Compress images quality and size."
 	printText ""
@@ -112,9 +115,9 @@ printHelp () {
 	return 0
 }
 
-# ==========================================================================
+# ===========================================
 	# Implementation
-# ==========================================================================
+# ===========================================
 
 run () {
 	if [ "${#}" = "0" ]; then
@@ -134,9 +137,10 @@ run () {
 	convertImagesToWebp
 	convertImagesToAvif
 
-	rm "/tmp/$LOCK_FILE"
+	preventMultiExecutionOnSameDirectoryReset
+
 	printText ""
-	printSuccessecho "Image optimization performed successfully !"
+	printSuccess "Image optimization performed successfully !"
 	printText ""
 }
 
@@ -144,23 +148,21 @@ preventMultiExecutionOnSameDirectory () {
 	LOCK_FILE=$(echo -n "$TARGET_DIR" | md5sum | cut -d" " -f1)
 
 	if [ -f "/tmp/$LOCK_FILE" ]; then
-		printAlertSep
+		newLine
 		printAlert "The script is currently processing the given path:"
-		printAlert "    :$TARGET_DIR"
-		printAlertSep
+		printAlert "    $TARGET_DIR"
+		newLine
 
 		printNotice "The script creates file that indicates it's running."
 		printNotice "This is necessary in order to prevent multiple executions in the same directory."
 		printNotice "In case the script crashes or is manually interrupted, you can reset the script status."
 		printNotice "Would you like to reset the script status and proceed with current execution?"
-		printf "${YELLOW}"
 		read -p "=> [Yy] to confirm: " -n 1 -r USER_CONFIRMATION
-		printf "${NC}"
 
 		if [[ $USER_CONFIRMATION =~ ^[Yy]$ ]]; then
-			rm "/tmp/$LOCK_FILE"
+			newLine
 			printNotice "The script status has been reset."
-			printTextSep
+			newLine
 		fi
 
 		if [[ ! $USER_CONFIRMATION =~ ^[Yy]$ ]]; then
@@ -170,6 +172,12 @@ preventMultiExecutionOnSameDirectory () {
 	fi
 
 	touch "/tmp/$LOCK_FILE"
+}
+
+preventMultiExecutionOnSameDirectoryReset () {
+	if [[ ! -z "$LOCK_FILE" ]]; then
+		rm "/tmp/$LOCK_FILE"
+	fi
 }
 
 checkForUpdates () {
@@ -233,11 +241,11 @@ parseArgs () {
 				fi
 			;;
 
-			-q | --quiet)
-				CWEBP_ARGS+=" -quiet"
-				PNG_OPTIMIZATION_ARGS+=" -quiet"
-				JPG_OPTIMIZATION_ARGS+=" --quiet"
-			;;
+			# -q | --quiet)
+			# 	CWEBP_ARGS+=" -quiet"
+			# 	PNG_OPTIMIZATION_ARGS+=" -quiet"
+			# 	JPG_OPTIMIZATION_ARGS+=" --quiet"
+			# ;;
 
 			-s | --strip-markers)
 				PNG_OPTIMIZATION_ARGS+=" -strip all"
@@ -248,11 +256,11 @@ parseArgs () {
 				if [ -n "$2" ] && [ "$2" -ge 0 ] && [ "$2" -le 7 ]; then
 					OPTIMIZATION_LEVEL="y"
 
-					if [ $PNG_OPTIMIZATION_LVL_OVERRIDE != 'y' ]; then
+					if [[ ! $PNG_OPTIMIZATION_LVL_OVERRIDE = 'y' ]]; then
 						PNG_OPTIMIZATION_ARGS+=" -o$2"
 					fi
 
-					if [ $JPG_OPTIMIZATION_LVL_OVERRIDE != 'y' ]; then
+					if [[ ! $JPG_OPTIMIZATION_LVL_OVERRIDE = 'y' ]]; then
 						JPG_OPTIMIZATION_QUALITY=$(((8 - $2) * 14))
 						if [ "$JPG_OPTIMIZATION_QUALITY" -ge 100 ]; then
 							JPG_OPTIMIZATION_QUALITY=100
@@ -302,7 +310,7 @@ parseArgs () {
 }
 
 optimizeImages () {
-	if [ $OPTIMIZATION_LEVEL != 'y' ]; then
+	if [[ ! $OPTIMIZATION_LEVEL = 'y' ]]; then
 		PNG_OPTIMIZATION_ARGS+=" -o2"
 		JPG_OPTIMIZATION_ARGS+=" -m82"
 	fi
@@ -348,9 +356,11 @@ convertImagesToAvif () {
 	fi
 }
 
-# ==========================================================================
+# ===========================================
 	# INIT
-# ==========================================================================
+# ===========================================
 
+clear
+printCopyright
 run "$@"
 exit 1
