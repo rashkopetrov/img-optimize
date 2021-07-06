@@ -2,10 +2,11 @@
 
 ## Prerequisite
 
--   jpegoptim for jpg optimization
--   optipng for png optimization
--   cwebp for WebP conversion
--   go-avif for Avif conversion
+-   bc: math calculations
+-   jpegoptim: jpg optimization
+-   optipng: png optimization
+-   cwebp: WebP conversion
+-   go-avif: Avif conversion
 
 ## Prerequisite Installation
 

@@ -23,8 +23,8 @@ VERSION="0.21.06.24"
 
 TARGET_DIR="$PWD"
 FIND_ARGS=""
-CWEBP_ARGS="  -quiet"
-PNG_OPTIMIZATION_ARGS="  -quiet"
+CWEBP_ARGS="-quiet"
+PNG_OPTIMIZATION_ARGS="-quiet"
 JPG_OPTIMIZATION_ARGS="-p -o --all-progressive --quiet"
 
 NC="\033[0m" # No Colo
@@ -36,82 +36,87 @@ YELLOW="\033[1;33m"
 	# Helpers/Utils
 # ===========================================
 
-newLine () {
-	printf "\n"
-}
-
 printText () {
-	printf "$1\n"
-}
+	case "$1" in
+		nl)
+			printf "\n"
+		;;
 
-printTextSep () {
-	printf "${NC}---------------------\n"
-}
+		text)
+			printf "$2\n"
+		;;
 
-printAlert () {
-	printf "${RED}$1${NC}\n"
-}
+		sep)
+			printf "${NC}---------------------${NC}\n"
+		;;
 
-printAlertSep () {
-	printf "${RED}---------------------${NC}\n"
-}
+		alert)
+			printf "${RED}$2${NC}\n"
+		;;
 
-printNotice () {
-	printf "${YELLOW}$1${NC}\n"
-}
+		alertSep)
+			printf "${RED}---------------------${NC}\n"
+		;;
 
-printNoticeSep () {
-	printf "${YELLOW}---------------------${NC}\n"
-}
+		notice)
+			printf "${YELLOW}$2${NC}\n"
+		;;
 
-printSuccess () {
-	printf "${GREEN}$1${NC}\n"
-}
+		noticeSep)
+			printf "${YELLOW}---------------------${NC}\n"
+		;;
 
-printSuccessSep () {
-	printf "${GREEN}---------------------${NC}\n"
+		success)
+			printf "${GREEN}$2${NC}\n"
+		;;
+
+		successSep)
+			printf "${GREEN}---------------------${NC}\n"
+		;;
+	*)
+	esac
 }
 
 commandRequired () {
 	[ -z "$(command -v $1)" ] && {
-		printAlert "Error: $1 isn't installed"
+		printText alert "Error: $1 isn't installed"
 		exit 1
 	}
 }
 
 printCopyright () {
-	printText "Optimize v$VERSION Copyright (c) 2021, Rashko Petrov"
-	printText ""
+	printText text "Optimize v$VERSION Copyright (c) 2021, Rashko Petrov"
+	printText nl
 }
 
 printHelp () {
-	printText "Usage: optimize [OPTIONS].... [PATH]"
-	printText "Optimize/Compress images quality and size."
-	printText ""
-	printText "Options:"
-	printText ""
-	printText "           --jpg                        Optimize the jpg images."
-	printText "           --jpg-to-webp                Convert the jpg images in webp but keeps the original files."
-	printText "           --jpg-to-avif                Convert the jpg images in avif but keeps the original files."
-	printText "           --jpg-optimization-lvl <ol>  Overrides the global optimization level."
-	printText ""
-	printText "           --png                        Optimize all png images."
-	printText "           --png-to-webp                Convert the png images in webp but keeps the original files."
-	printText "           --png-to-avif                Convert the png images in avif but keeps the original files."
-	printText "           --png-optimization-lvl <ol>  Overrides the global optimization level."
-	printText ""
-	printText "           --cmin [+|-]<n>              File's status was last changed n minutes ago."
-	printText "  -q,      --quiet                      Run optimization quietly."
-	printText "  -s,      --strip-markers              Strip metadata when optimizing jpg/png images."
-	printText "  -o <ol>, --optimization-lvl <ol>      Optimization level (0-7) [default: 2]."
-	printText "  -a,      --all                        Optimize and convert all jpg/png images to webp/avif."
-	printText "  -p,      --path <images path>         Define images path [default: current directory]."
-	printText "  -v,      --version                    Print version information and quit."
-	printText "  -u,      --check-for-update           Check for updates."
-	printText ""
-	printText "Examples:"
-	printText "  optimize              Prints the help text"
-	printText "  optimize --png --jpg  Optimizes all png and jpg in current durectory"
+	printText text "Usage: optimize [OPTIONS].... [PATH]"
+	printText text "Optimize/Compress images quality and size."
+	printText nl
+	printText text "Options:"
+	printText nl
+	printText text "           --jpg                        Optimize the jpg images."
+	printText text "           --jpg-to-webp                Convert the jpg images in webp but keeps the original files."
+	printText text "           --jpg-to-avif                Convert the jpg images in avif but keeps the original files."
+	printText text "           --jpg-optimization-lvl <ol>  Overrides the global optimization level."
+	printText nl
+	printText text "           --png                        Optimize all png images."
+	printText text "           --png-to-webp                Convert the png images in webp but keeps the original files."
+	printText text "           --png-to-avif                Convert the png images in avif but keeps the original files."
+	printText text "           --png-optimization-lvl <ol>  Overrides the global optimization level."
+	printText nl
+	printText text "           --cmin [+|-]<n>              File's status was last changed n minutes ago."
+	printText text "  -q,      --quiet                      Run optimization quietly."
+	printText text "  -s,      --strip-markers              Strip metadata when optimizing jpg/png images."
+	printText text "  -o <ol>, --optimization-lvl <ol>      Optimization level (0-7) [default: 2]."
+	printText text "  -a,      --all                        Optimize and convert all jpg/png images to webp/avif."
+	printText text "  -p,      --path <images path>         Define images path [default: current directory]."
+	printText text "  -v,      --version                    Print version information and quit."
+	printText text "  -u,      --check-for-update           Check for updates."
+	printText nl
+	printText text "Examples:"
+	printText text "  optimize              Prints the help text"
+	printText text "  optimize --png --jpg  Optimizes all png and jpg in current durectory"
 	return 0
 }
 
@@ -121,10 +126,9 @@ printHelp () {
 
 run () {
 	if [ "${#}" = "0" ]; then
-		printAlertSep
-		printAlert "optimize: arguments missing"
-		printAlert "Try 'optimize --help' for more information."
-		printAlertSep
+		printText alert "optimize: arguments missing"
+		printText alert "Try 'optimize --help' for more information."
+		printText nl
 		exit 1
 	fi
 
@@ -139,34 +143,34 @@ run () {
 
 	preventMultiExecutionOnSameDirectoryReset
 
-	printText ""
-	printSuccess "Image optimization performed successfully !"
-	printText ""
+	printText nl
+	printText success "Image optimization performed successfully !"
+	printText nl
 }
 
 preventMultiExecutionOnSameDirectory () {
 	LOCK_FILE=$(echo -n "$TARGET_DIR" | md5sum | cut -d" " -f1)
 
 	if [ -f "/tmp/$LOCK_FILE" ]; then
-		newLine
-		printAlert "The script is currently processing the given path:"
-		printAlert "    $TARGET_DIR"
-		newLine
+		printText nl
+		printText alert "The script is currently processing the given path:"
+		printText alert "    $TARGET_DIR"
+		printText nl
 
-		printNotice "The script creates file that indicates it's running."
-		printNotice "This is necessary in order to prevent multiple executions in the same directory."
-		printNotice "In case the script crashes or is manually interrupted, you can reset the script status."
-		printNotice "Would you like to reset the script status and proceed with current execution?"
+		printText notice "The script creates file that indicates it's running."
+		printText notice "This is necessary in order to prevent multiple executions in the same directory."
+		printText notice "In case the script crashes or is manually interrupted, you can reset the script status."
+		printText notice "Would you like to reset the script status and proceed with current execution?"
 		read -p "=> [Yy] to confirm: " -n 1 -r USER_CONFIRMATION
 
 		if [[ $USER_CONFIRMATION =~ ^[Yy]$ ]]; then
-			newLine
-			printNotice "The script status has been reset."
-			newLine
+			printText nl
+			printText notice "The script status has been reset."
+			printText nl
 		fi
 
 		if [[ ! $USER_CONFIRMATION =~ ^[Yy]$ ]]; then
-			newLine
+			printText nl
 			exit 1
 		fi
 	fi
@@ -180,10 +184,18 @@ preventMultiExecutionOnSameDirectoryReset () {
 	fi
 }
 
+checkForRequirements () {
+	commandRequired "jpegoptim"
+	commandRequired "optipng"
+	commandRequired "cwebp"
+	commandRequired "avif"
+	commandRequired "bc"
+}
+
 checkForUpdates () {
-	printNoticeSep
-	printNotice "Check for update is not implemented yet."
-	printNoticeSep
+	printText noticeSep
+	printText notice "Check for update is not implemented yet."
+	printText noticeSep
 }
 
 parseArgs () {
@@ -241,12 +253,6 @@ parseArgs () {
 				fi
 			;;
 
-			# -q | --quiet)
-			# 	CWEBP_ARGS+=" -quiet"
-			# 	PNG_OPTIMIZATION_ARGS+=" -quiet"
-			# 	JPG_OPTIMIZATION_ARGS+=" --quiet"
-			# ;;
-
 			-s | --strip-markers)
 				PNG_OPTIMIZATION_ARGS+=" -strip all"
 				JPG_OPTIMIZATION_ARGS+=" -s"
@@ -300,7 +306,7 @@ parseArgs () {
 			;;
 		*)
 
-		printAlert "Error! Unknown option '$1'."
+		printText alert "Error! Unknown option '$1'."
 		printHelp
 		exit 1
 		esac
@@ -309,39 +315,83 @@ parseArgs () {
 	done
 }
 
+listImages () {
+	if [[ $1 = "png" ]]; then
+		find . -type f -iname "*.png" $FIND_ARGS
+	fi
+
+	if [[ $1 = "jpg" ]]; then
+		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS
+	fi
+}
+
+optimizeImage () {
+	if [[ ! -z "$2" ]]; then
+		FILE_NAME=`basename "$2"`
+		FILE_DIRECTORY=$( dirname "$2" )
+		FILE_MODE=$(stat -c '%a' $2)
+		FILE_OWNER_USER_ID=$(stat -c '%g' $2)
+		FILE_OWNER_GROUP_ID=$(stat -c '%g' $2)
+		FILE_SIZE_BEFORE_KB=$( bc <<< "scale=0; $(wc -c < $2)/1000" )
+
+		printText text "** Processing: $FILE_NAME"
+		printText text "Path: $2"
+
+		if [[ $1 = "jpg" ]]; then
+			jpegoptim $JPG_OPTIMIZATION_ARGS $2
+		fi
+
+		if [[ $1 = "png" ]]; then
+			optipng $PNG_OPTIMIZATION_ARGS $2
+		fi
+
+		FILE_SIZE_AFTER_KB=$( bc <<< "scale=0; $(wc -c < $2)/1000" )
+		FILE_SIZE_DIFFERENCE_KB=$( bc <<< "$FILE_SIZE_BEFORE_KB - $FILE_SIZE_AFTER_KB" )
+
+		printText text "Size (kb):"
+		printText text "    before: $FILE_SIZE_BEFORE_KB    after: $FILE_SIZE_AFTER_KB    difference: $FILE_SIZE_DIFFERENCE_KB"
+		printText nl
+
+		# the new files are owned by root when using docker
+		# so we set back the owner and the mode
+		chmod $FILE_MODE $2
+		chown $FILE_OWNER_USER_ID:$FILE_OWNER_GROUP_ID $2
+	fi
+}
+
 optimizeImages () {
+	printText text "Optimizing the images..."
+
 	if [[ ! $OPTIMIZATION_LEVEL = 'y' ]]; then
 		PNG_OPTIMIZATION_ARGS+=" -o2"
 		JPG_OPTIMIZATION_ARGS+=" -m82"
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_OPTIMIZATION" = "y" ]]; then
-		commandRequired "jpegoptim"
-		printText "Optimizing the jpg images..."
-
-		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -r -0 jpegoptim $JPG_OPTIMIZATION_ARGS
+		IMAGES=$(listImages jpg)
+		for IMAGE in $IMAGES; do
+			optimizeImage jpg $IMAGE
+		done
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_OPTIMIZATION" = "y" ]]; then
-		commandRequired "optipng"
-		printText "Optimizing the png images..."
-
-		find . -type f -iname '*.png' $FIND_ARGS -print0 | xargs -r -0 optipng $PNG_OPTIMIZATION_ARGS
+		IMAGES=$(listImages png)
+		for IMAGE in $IMAGES; do
+			optimizeImage png $IMAGE
+		done
 	fi
 }
 
 convertImagesToWebp () {
-	commandRequired "cwebp"
-
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_WEBP" = "y" ]]; then
-		printText "Converting the jpg images to cwebp..."
+		printText text "Converting the jpg images to cwebp..."
 
 		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -0 -r -I {} \
 			bash -c "[ ! -f '{}.webp' ] && { cwebp $CWEBP_ARGS -q 82 -mt '{}' -o '{}.webp' || rm -f '{}.webp'; }"
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_TO_WEBP" = "y" ]]; then
-		printText "Converting the png images to cwebp..."
+		printText text "Converting the png images to cwebp..."
 
 		find . -type f -iname "*.png" $FIND_ARGS -print0 | xargs -0 -r -I {} \
 			bash -c "[ ! -f '{}.webp' ] && { cwebp $CWEBP_ARGS -z 9 -mt '{}' -o '{}.webp'; }"
@@ -349,17 +399,15 @@ convertImagesToWebp () {
 }
 
 convertImagesToAvif () {
-	commandRequired "avif"
-
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_AVIF" = "y" ]]; then
-		printText "Converting the jpg images to avif..."
+		printText text "Converting the jpg images to avif..."
 
 		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -0 -r -I {} \
 			bash -c "[ ! -f '{}.avif' ] && { avif -e '{}' -o '{}.avif' || rm -f '{}.avif'; }"
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_TO_AVIF" = "y" ]]; then
-		printText "Converting the png images to avif..."
+		printText text "Converting the png images to avif..."
 
 		find . -type f -iname "*.png" $FIND_ARGS -print0 | xargs -0 -r -I {} \
 			bash -c "[ ! -f '{}.avif' ] && { avif -e '{}' -o '{}.avif' || rm -f '{}.avif'; }"
@@ -372,5 +420,6 @@ convertImagesToAvif () {
 
 clear
 printCopyright
+checkForRequirements
 run "$@"
 exit 1

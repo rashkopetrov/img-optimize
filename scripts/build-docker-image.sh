@@ -6,6 +6,10 @@ cd $( dirname "$SCRIPT_DIR" )
 NC="\033[0m" # No Colo
 RED="\033[0;31m"
 
+newLine () {
+	printf "\n"
+}
+
 printText () {
 	printf "$1\n"
 }
@@ -37,6 +41,8 @@ docker build \
 	.
 
 read -p "Would you like to push the images to Docker Hub? [Y/n]: " -n 1 -r PUSH_TO_DOCKER_HUB
+newLine
+
 if [[ $PUSH_TO_DOCKER_HUB =~ ^[Yy]$ ]]; then
 	docker push $ACCOUNT_NAME/img-optimize:$CURRENT_VERSION
 	docker push $ACCOUNT_NAME/img-optimize:latest

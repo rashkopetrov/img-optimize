@@ -8,6 +8,7 @@ export LANG=C.UTF-8
 apt-get update
 
 apt-get -y install \
+	bc \
     curl \
     jpegoptim \
     optipng \
