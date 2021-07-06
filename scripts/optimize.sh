@@ -13,6 +13,12 @@
 # License         :MIT License
 #                 :Copyright (c) 2021 Rashko Petrov
 # ###########################################
+#            “Clean code always
+#     looks like it was written
+#        by someone who cares.“
+#
+#           -- Michael Feathers
+#############################################
 
 # ===========================================
 	# Variables
@@ -126,9 +132,9 @@ printHelp () {
 	printText text "            --webp-lossless-preset <int>   Activates lossless preset with given level in [default: 9]"
 	printText text "                                           (0:fast..9:slowest)"
 	printText nl
-	printText text "                                           AVIF settings:"
-	printText text "            --avif-compression-level <int> Quality factor (0:small..100:big), [default: 82]"
-	printText text "            --avif-compression-speed <int> Activates lossless preset with given level in [default: 9]"
+	printText text "                                           AVIF settings (The Next-Gen Compression Codec):"
+	printText text "            --avif-compression-level <int> Compression level (0..63), [default: 25]"
+	printText text "            --avif-compression-speed <int> Compression speed (0..8), [default: 4]"
 	printText nl
 	printText text "            --cmin [+|-]<n>                File's status was last changed n minutes ago"
 	printText text "  -a,       --all                          Optimize and convert all jpg/png images to webp/avif"
