@@ -30,6 +30,10 @@ CWEBP_ARGS="-quiet"
 CWEBP_LOSSLESS_PRESET="9"
 CWEBP_QUALITY_FACTOR="82"
 
+AVIF_ARGS=""
+AVIF_COMPRESSION_LEVEL="25"
+AVIF_COMPRESSION_SPEED="4"
+
 NC="\033[0m" # No Colo
 RED="\033[0;31m"
 GREEN="\033[0;32m"
@@ -103,35 +107,39 @@ printHelp () {
 	printText nl
 	printText text "Options:"
 	printText nl
-	printText text "            --jpg                         Optimize the jpg images"
-	printText text "            --jpg-to-webp                 Convert the jpg images in webp but keeps the original files"
-	printText text "            --jpg-to-avif                 Convert the jpg images in avif but keeps the original files"
-	printText text "            --jpg-optimization-lvl <int>  Overrides the global optimization level"
+	printText text "            --jpg                          Optimize the jpg images"
+	printText text "            --jpg-to-webp                  Convert the jpg images in webp but keeps the original files"
+	printText text "            --jpg-to-avif                  Convert the jpg images in avif but keeps the original files"
+	printText text "            --jpg-optimization-lvl <int>   Overrides the global optimization level"
 	printText nl
-	printText text "            --png                         Optimize all png images"
-	printText text "            --png-to-webp                 Convert the png images in webp but keeps the original files"
-	printText text "            --png-to-avif                 Convert the png images in avif but keeps the original files"
-	printText text "            --png-optimization-lvl <int>  Overrides the global optimization level."
+	printText text "            --png                          Optimize all png images"
+	printText text "            --png-to-webp                  Convert the png images in webp but keeps the original files"
+	printText text "            --png-to-avif                  Convert the png images in avif but keeps the original files"
+	printText text "            --png-optimization-lvl <int>   Overrides the global optimization level."
 	printText nl
-	printText text "                                         Optimization settings:"
-	printText text "  -s,       --strip-markers               Strip metadata when optimizing jpg/png images"
-	printText text "  -o <int>, --optimization-lvl <int>     Optimization level (0-7) [default: 2]"
+	printText text "                                           Optimization settings:"
+	printText text "  -s,       --strip-markers                Strip metadata when optimizing jpg/png images"
+	printText text "  -o <int>, --optimization-lvl <int>       Optimization level (0-7) [default: 2]"
 	printText nl
-	printText text "                                         Webp settings:"
-	printText text "            --webp-quality-factor <int>  Quality factor (0:small..100:big), [default: 82]"
-	printText text "            --webp-lossless-preset <int> Activates lossless preset with given level in [default: 9]"
-	printText text "                                         (0:fast..9:slowest)"
+	printText text "                                           WEBP settings:"
+	printText text "            --webp-quality-factor <int>    Quality factor (0:small..100:big), [default: 82]"
+	printText text "            --webp-lossless-preset <int>   Activates lossless preset with given level in [default: 9]"
+	printText text "                                           (0:fast..9:slowest)"
 	printText nl
-	printText text "            --cmin [+|-]<n>               File's status was last changed n minutes ago"
-	printText text "  -a,       --all                         Optimize and convert all jpg/png images to webp/avif"
-	printText text "  -p,       --path <images path>          Define images path [default: current directory]"
-	printText text "  -v,       --version                     Print version information and quit"
-	printText text "  -u,       --check-for-update            Check for updates"
+	printText text "                                           AVIF settings:"
+	printText text "            --avif-compression-level <int> Quality factor (0:small..100:big), [default: 82]"
+	printText text "            --avif-compression-speed <int> Activates lossless preset with given level in [default: 9]"
+	printText nl
+	printText text "            --cmin [+|-]<n>                File's status was last changed n minutes ago"
+	printText text "  -a,       --all                          Optimize and convert all jpg/png images to webp/avif"
+	printText text "  -p,       --path <images path>           Define images path [default: current directory]"
+	printText text "  -v,       --version                      Print version information and quit"
+	printText text "  -u,       --check-for-update             Check for updates"
 	printText nl
 	printText text "Examples:"
-	printText text "  optimize                               Prints the help text"
-	printText text "  optimize --help                        Prints the help text"
-	printText text "  optimize --png --jpg --strip-markers   Optimizes all png and jpg in current durectory"
+	printText text "  optimize                                 Prints the help text"
+	printText text "  optimize --help                          Prints the help text"
+	printText text "  optimize --png --jpg --strip-markers     Optimizes all png and jpg in current durectory"
 	return 0
 }
 
@@ -300,6 +308,20 @@ parseArgs () {
 				fi
 			;;
 
+			--avif-compression-level)
+				if [ -n "$2" ]; then
+					AVIF_COMPRESSION_LEVEL="$2"
+					shift
+				fi
+			;;
+
+			--avif-compression-speed)
+				if [ -n "$2" ]; then
+					AVIF_COMPRESSION_SPEED="$2"
+					shift
+				fi
+			;;
+
 			-a | --all)
 				ALL_MANIPULATIONS="y"
 			;;
@@ -336,7 +358,7 @@ parseArgs () {
 	done
 }
 
-listImages () {
+findImages () {
 	if [[ $1 = "png" ]]; then
 		find . -type f -iname "*.png" $FIND_ARGS
 	fi
@@ -396,14 +418,14 @@ optimizeImages () {
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_OPTIMIZATION" = "y" ]]; then
-		IMAGES=$(listImages jpg)
+		IMAGES=$(findImages jpg)
 		for IMAGE in $IMAGES; do
 			optimizeImage jpg $IMAGE
 		done
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_OPTIMIZATION" = "y" ]]; then
-		IMAGES=$(listImages png)
+		IMAGES=$(findImages png)
 		for IMAGE in $IMAGES; do
 			optimizeImage png $IMAGE
 		done
@@ -423,8 +445,8 @@ convertImageToWebp () {
 		printText text "Path: $1"
 
 		{ # try
-			[ ! -f '{}.webp' ] && {
-				cwebp $CWEBP_ARGS $1 -o $1.webp
+			[ ! -f $1.webp ] && {
+				cwebp $CWEBP_ARGS $1 -o $1.webp || rm -f $1.webp
 			}
 
 			FILE_SIZE_WEBP_KB=$( bc <<< "scale=0; $(wc -c < $1.webp)/1000" )
@@ -448,39 +470,85 @@ convertImageToWebp () {
 }
 
 convertImagesToWebp () {
-	printText text "Converting the images to cwebp..."
-
 	CWEBP_ARGS+=" -z $CWEBP_LOSSLESS_PRESET"
 	CWEBP_ARGS+=" -q $CWEBP_QUALITY_FACTOR"
 
+	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_WEBP" = "y" || "$PNG_TO_WEBP" = "y"  ]]; then
+		printText text "Converting the images to cwebp..."
+	fi
+
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_WEBP" = "y" ]]; then
-		IMAGES=$(listImages jpg)
+		IMAGES=$(findImages jpg)
 		for IMAGE in $IMAGES; do
 			convertImageToWebp $IMAGE
 		done
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_TO_WEBP" = "y" ]]; then
-		IMAGES=$(listImages png)
+		IMAGES=$(findImages png)
 		for IMAGE in $IMAGES; do
 			convertImageToWebp $IMAGE
 		done
 	fi
 }
 
-convertImagesToAvif () {
-	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_AVIF" = "y" ]]; then
-		printText text "Converting the jpg images to avif..."
+convertImageToAvif () {
+	if [[ ! -z "$1" ]]; then
+		FILE_NAME=`basename "$1"`
+		FILE_DIRECTORY=$( dirname "$1" )
+		FILE_MODE=$(stat -c '%a' $1)
+		FILE_OWNER_USER_ID=$(stat -c '%g' $1)
+		FILE_OWNER_GROUP_ID=$(stat -c '%g' $1)
+		FILE_SIZE_KB=$( bc <<< "scale=0; $(wc -c < $1)/1000" )
 
-		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -0 -r -I {} \
-			bash -c "[ ! -f '{}.avif' ] && { avif -e '{}' -o '{}.avif' || rm -f '{}.avif'; }"
+		printText textList "** Processing: $FILE_NAME"
+		printText text "Path: $1"
+
+		{ # try
+			[ ! -f $1.avif ] && {
+				avif $AVIF_ARGS -e $1 -o $1.avif || rm -f $1.avif
+			}
+
+			FILE_SIZE_AVIF_KB=$( bc <<< "scale=0; $(wc -c < $1.avif)/1000" )
+			FILE_SIZE_DIFFERENCE_KB=$( bc <<< "$FILE_SIZE_KB - $FILE_SIZE_AVIF_KB" )
+
+			printText text "Size (kb):"
+			printText text "    before: $FILE_SIZE_KB    after: $FILE_SIZE_AVIF_KB    difference: $FILE_SIZE_DIFFERENCE_KB"
+			printText nl
+		} || { # catch
+			printText alert "Err: something went wrong."
+			printText alert "Check if the image is corrupted somehow:"
+			stat $1
+			printText nl
+		}
+
+		# the new files are owned by root when using docker
+		# so we set back the owner and the mode
+		chmod $FILE_MODE $1.avif
+		chown $FILE_OWNER_USER_ID:$FILE_OWNER_GROUP_ID $1.avif
+	fi
+}
+
+convertImagesToAvif () {
+	AVIF_ARGS+=" -q $AVIF_COMPRESSION_LEVEL"
+	AVIF_ARGS+=" -s $AVIF_COMPRESSION_SPEED"
+
+	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_AVIF" = "y" || "$PNG_TO_AVIF" = "y" ]]; then
+		printText text "Converting the images to avif..."
+	fi
+
+	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_AVIF" = "y" ]]; then
+		IMAGES=$(findImages jpg)
+		for IMAGE in $IMAGES; do
+			convertImageToAvif $IMAGE
+		done
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_TO_AVIF" = "y" ]]; then
-		printText text "Converting the png images to avif..."
-
-		find . -type f -iname "*.png" $FIND_ARGS -print0 | xargs -0 -r -I {} \
-			bash -c "[ ! -f '{}.avif' ] && { avif -e '{}' -o '{}.avif' || rm -f '{}.avif'; }"
+		IMAGES=$(findImages png)
+		for IMAGE in $IMAGES; do
+			convertImageToAvif $IMAGE
+		done
 	fi
 }
 
