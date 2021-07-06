@@ -25,7 +25,7 @@ TARGET_DIR="$PWD"
 FIND_ARGS=""
 CWEBP_ARGS="  -quiet"
 PNG_OPTIMIZATION_ARGS="  -quiet"
-JPG_OPTIMIZATION_ARGS="-p --all-progressive --overwrite --quiet"
+JPG_OPTIMIZATION_ARGS="-p -o --all-progressive --quiet"
 
 NC="\033[0m" # No Colo
 RED="\033[0;31m"
@@ -317,12 +317,14 @@ optimizeImages () {
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_OPTIMIZATION" = "y" ]]; then
 		commandRequired "jpegoptim"
+		printText "Optimizing the jpg images..."
 
 		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -r -0 jpegoptim $JPG_OPTIMIZATION_ARGS
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_OPTIMIZATION" = "y" ]]; then
 		commandRequired "optipng"
+		printText "Optimizing the png images..."
 
 		find . -type f -iname '*.png' $FIND_ARGS -print0 | xargs -r -0 optipng $PNG_OPTIMIZATION_ARGS
 	fi
@@ -332,11 +334,15 @@ convertImagesToWebp () {
 	commandRequired "cwebp"
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_WEBP" = "y" ]]; then
+		printText "Converting the jpg images to cwebp..."
+
 		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -0 -r -I {} \
 			bash -c "[ ! -f '{}.webp' ] && { cwebp $CWEBP_ARGS -q 82 -mt '{}' -o '{}.webp' || rm -f '{}.webp'; }"
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_TO_WEBP" = "y" ]]; then
+		printText "Converting the png images to cwebp..."
+
 		find . -type f -iname "*.png" $FIND_ARGS -print0 | xargs -0 -r -I {} \
 			bash -c "[ ! -f '{}.webp' ] && { cwebp $CWEBP_ARGS -z 9 -mt '{}' -o '{}.webp'; }"
 	fi
@@ -346,11 +352,15 @@ convertImagesToAvif () {
 	commandRequired "avif"
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_AVIF" = "y" ]]; then
+		printText "Converting the jpg images to avif..."
+
 		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -0 -r -I {} \
 			bash -c "[ ! -f '{}.avif' ] && { avif -e '{}' -o '{}.avif' || rm -f '{}.avif'; }"
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_TO_AVIF" = "y" ]]; then
+		printText "Converting the png images to avif..."
+
 		find . -type f -iname "*.png" $FIND_ARGS -print0 | xargs -0 -r -I {} \
 			bash -c "[ ! -f '{}.avif' ] && { avif -e '{}' -o '{}.avif' || rm -f '{}.avif'; }"
 	fi
