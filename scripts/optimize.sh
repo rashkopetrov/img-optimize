@@ -23,9 +23,12 @@ VERSION="0.21.06.24"
 
 TARGET_DIR="$PWD"
 FIND_ARGS=""
-CWEBP_ARGS="-quiet"
 PNG_OPTIMIZATION_ARGS="-quiet"
 JPG_OPTIMIZATION_ARGS="-p -o --all-progressive --quiet"
+
+CWEBP_ARGS="-quiet"
+CWEBP_LOSSLESS_PRESET="9"
+CWEBP_QUALITY_FACTOR="82"
 
 NC="\033[0m" # No Colo
 RED="\033[0;31m"
@@ -44,6 +47,10 @@ printText () {
 
 		text)
 			printf "$2\n"
+		;;
+
+		textList)
+			printf "${YELLOW}==>${NC} $2\n"
 		;;
 
 		sep)
@@ -92,31 +99,39 @@ printCopyright () {
 printHelp () {
 	printText text "Usage: optimize [OPTIONS].... [PATH]"
 	printText text "Optimize/Compress images quality and size."
+	printText text "A wrapper around other tools and optimization services that simplifies the process."
 	printText nl
 	printText text "Options:"
 	printText nl
-	printText text "           --jpg                        Optimize the jpg images."
-	printText text "           --jpg-to-webp                Convert the jpg images in webp but keeps the original files."
-	printText text "           --jpg-to-avif                Convert the jpg images in avif but keeps the original files."
-	printText text "           --jpg-optimization-lvl <ol>  Overrides the global optimization level."
+	printText text "            --jpg                         Optimize the jpg images"
+	printText text "            --jpg-to-webp                 Convert the jpg images in webp but keeps the original files"
+	printText text "            --jpg-to-avif                 Convert the jpg images in avif but keeps the original files"
+	printText text "            --jpg-optimization-lvl <int>  Overrides the global optimization level"
 	printText nl
-	printText text "           --png                        Optimize all png images."
-	printText text "           --png-to-webp                Convert the png images in webp but keeps the original files."
-	printText text "           --png-to-avif                Convert the png images in avif but keeps the original files."
-	printText text "           --png-optimization-lvl <ol>  Overrides the global optimization level."
+	printText text "            --png                         Optimize all png images"
+	printText text "            --png-to-webp                 Convert the png images in webp but keeps the original files"
+	printText text "            --png-to-avif                 Convert the png images in avif but keeps the original files"
+	printText text "            --png-optimization-lvl <int>  Overrides the global optimization level."
 	printText nl
-	printText text "           --cmin [+|-]<n>              File's status was last changed n minutes ago."
-	printText text "  -q,      --quiet                      Run optimization quietly."
-	printText text "  -s,      --strip-markers              Strip metadata when optimizing jpg/png images."
-	printText text "  -o <ol>, --optimization-lvl <ol>      Optimization level (0-7) [default: 2]."
-	printText text "  -a,      --all                        Optimize and convert all jpg/png images to webp/avif."
-	printText text "  -p,      --path <images path>         Define images path [default: current directory]."
-	printText text "  -v,      --version                    Print version information and quit."
-	printText text "  -u,      --check-for-update           Check for updates."
+	printText text "                                         Optimization settings:"
+	printText text "  -s,       --strip-markers               Strip metadata when optimizing jpg/png images"
+	printText text "  -o <int>, --optimization-lvl <int>     Optimization level (0-7) [default: 2]"
+	printText nl
+	printText text "                                         Webp settings:"
+	printText text "            --webp-quality-factor <int>  Quality factor (0:small..100:big), [default: 82]"
+	printText text "            --webp-lossless-preset <int> Activates lossless preset with given level in [default: 9]"
+	printText text "                                         (0:fast..9:slowest)"
+	printText nl
+	printText text "            --cmin [+|-]<n>               File's status was last changed n minutes ago"
+	printText text "  -a,       --all                         Optimize and convert all jpg/png images to webp/avif"
+	printText text "  -p,       --path <images path>          Define images path [default: current directory]"
+	printText text "  -v,       --version                     Print version information and quit"
+	printText text "  -u,       --check-for-update            Check for updates"
 	printText nl
 	printText text "Examples:"
-	printText text "  optimize              Prints the help text"
-	printText text "  optimize --png --jpg  Optimizes all png and jpg in current durectory"
+	printText text "  optimize                               Prints the help text"
+	printText text "  optimize --help                        Prints the help text"
+	printText text "  optimize --png --jpg --strip-markers   Optimizes all png and jpg in current durectory"
 	return 0
 }
 
@@ -182,14 +197,6 @@ preventMultiExecutionOnSameDirectoryReset () {
 	if [[ ! -z "$LOCK_FILE" ]]; then
 		rm "/tmp/$LOCK_FILE"
 	fi
-}
-
-checkForRequirements () {
-	commandRequired "jpegoptim"
-	commandRequired "optipng"
-	commandRequired "cwebp"
-	commandRequired "avif"
-	commandRequired "bc"
 }
 
 checkForUpdates () {
@@ -279,6 +286,20 @@ parseArgs () {
 				fi
 			;;
 
+			--webp-lossless-preset)
+				if [ -n "$2" ]; then
+					CWEBP_LOSSLESS_PRESET="$2"
+					shift
+				fi
+			;;
+
+			--webp-quality-factor)
+				if [ -n "$2" ]; then
+					CWEBP_QUALITY_FACTOR="$2"
+					shift
+				fi
+			;;
+
 			-a | --all)
 				ALL_MANIPULATIONS="y"
 			;;
@@ -334,23 +355,30 @@ optimizeImage () {
 		FILE_OWNER_GROUP_ID=$(stat -c '%g' $2)
 		FILE_SIZE_BEFORE_KB=$( bc <<< "scale=0; $(wc -c < $2)/1000" )
 
-		printText text "** Processing: $FILE_NAME"
+		printText textList "** Processing: $FILE_NAME"
 		printText text "Path: $2"
 
-		if [[ $1 = "jpg" ]]; then
-			jpegoptim $JPG_OPTIMIZATION_ARGS $2
-		fi
+		{ # try
+			if [[ $1 = "jpg" ]]; then
+				jpegoptim $JPG_OPTIMIZATION_ARGS $2
+			fi
 
-		if [[ $1 = "png" ]]; then
-			optipng $PNG_OPTIMIZATION_ARGS $2
-		fi
+			if [[ $1 = "png" ]]; then
+				optipng $PNG_OPTIMIZATION_ARGS $2
+			fi
 
-		FILE_SIZE_AFTER_KB=$( bc <<< "scale=0; $(wc -c < $2)/1000" )
-		FILE_SIZE_DIFFERENCE_KB=$( bc <<< "$FILE_SIZE_BEFORE_KB - $FILE_SIZE_AFTER_KB" )
+			FILE_SIZE_AFTER_KB=$( bc <<< "scale=0; $(wc -c < $2)/1000" )
+			FILE_SIZE_DIFFERENCE_KB=$( bc <<< "$FILE_SIZE_BEFORE_KB - $FILE_SIZE_AFTER_KB" )
 
-		printText text "Size (kb):"
-		printText text "    before: $FILE_SIZE_BEFORE_KB    after: $FILE_SIZE_AFTER_KB    difference: $FILE_SIZE_DIFFERENCE_KB"
-		printText nl
+			printText text "Size (kb):"
+			printText text "    before: $FILE_SIZE_BEFORE_KB    after: $FILE_SIZE_AFTER_KB    difference: $FILE_SIZE_DIFFERENCE_KB"
+			printText nl
+		} || { # catch
+			printText alert "Err: something went wrong."
+			printText alert "Check if the image is corrupted somehow:"
+			stat $2
+			printText nl
+		}
 
 		# the new files are owned by root when using docker
 		# so we set back the owner and the mode
@@ -382,19 +410,61 @@ optimizeImages () {
 	fi
 }
 
-convertImagesToWebp () {
-	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_WEBP" = "y" ]]; then
-		printText text "Converting the jpg images to cwebp..."
+convertImageToWebp () {
+	if [[ ! -z "$1" ]]; then
+		FILE_NAME=`basename "$1"`
+		FILE_DIRECTORY=$( dirname "$1" )
+		FILE_MODE=$(stat -c '%a' $1)
+		FILE_OWNER_USER_ID=$(stat -c '%g' $1)
+		FILE_OWNER_GROUP_ID=$(stat -c '%g' $1)
+		FILE_SIZE_KB=$( bc <<< "scale=0; $(wc -c < $1)/1000" )
 
-		find . -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) $FIND_ARGS -print0 | xargs -0 -r -I {} \
-			bash -c "[ ! -f '{}.webp' ] && { cwebp $CWEBP_ARGS -q 82 -mt '{}' -o '{}.webp' || rm -f '{}.webp'; }"
+		printText textList "** Processing: $FILE_NAME"
+		printText text "Path: $1"
+
+		{ # try
+			[ ! -f '{}.webp' ] && {
+				cwebp $CWEBP_ARGS $1 -o $1.webp
+			}
+
+			FILE_SIZE_WEBP_KB=$( bc <<< "scale=0; $(wc -c < $1.webp)/1000" )
+			FILE_SIZE_DIFFERENCE_KB=$( bc <<< "$FILE_SIZE_KB - $FILE_SIZE_WEBP_KB" )
+
+			printText text "Size (kb):"
+			printText text "    before: $FILE_SIZE_KB    after: $FILE_SIZE_WEBP_KB    difference: $FILE_SIZE_DIFFERENCE_KB"
+			printText nl
+		} || { # catch
+			printText alert "Err: something went wrong."
+			printText alert "Check if the image is corrupted somehow:"
+			stat $1
+			printText nl
+		}
+
+		# the new files are owned by root when using docker
+		# so we set back the owner and the mode
+		chmod $FILE_MODE $1.webp
+		chown $FILE_OWNER_USER_ID:$FILE_OWNER_GROUP_ID $1.webp
+	fi
+}
+
+convertImagesToWebp () {
+	printText text "Converting the images to cwebp..."
+
+	CWEBP_ARGS+=" -z $CWEBP_LOSSLESS_PRESET"
+	CWEBP_ARGS+=" -q $CWEBP_QUALITY_FACTOR"
+
+	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_WEBP" = "y" ]]; then
+		IMAGES=$(listImages jpg)
+		for IMAGE in $IMAGES; do
+			convertImageToWebp $IMAGE
+		done
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_TO_WEBP" = "y" ]]; then
-		printText text "Converting the png images to cwebp..."
-
-		find . -type f -iname "*.png" $FIND_ARGS -print0 | xargs -0 -r -I {} \
-			bash -c "[ ! -f '{}.webp' ] && { cwebp $CWEBP_ARGS -z 9 -mt '{}' -o '{}.webp'; }"
+		IMAGES=$(listImages png)
+		for IMAGE in $IMAGES; do
+			convertImageToWebp $IMAGE
+		done
 	fi
 }
 
@@ -420,6 +490,12 @@ convertImagesToAvif () {
 
 clear
 printCopyright
-checkForRequirements
+
+commandRequired "jpegoptim"
+commandRequired "optipng"
+commandRequired "cwebp"
+commandRequired "avif"
+commandRequired "bc"
+
 run "$@"
 exit 1

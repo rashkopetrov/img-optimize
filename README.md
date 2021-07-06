@@ -1,6 +1,6 @@
 # Image optimization bash script
 
-This script optimizes the images quality and size.
+This script optimizes the images quality and size. It's a wrapper around other tools and optimization services that simplifies the process.
 
 The idea for this script is taken from [VirtuBox / img-optimize](https://github.com/VirtuBox/img-optimize). The script, however, is built from the ground up based on my personal needs and views.
 
