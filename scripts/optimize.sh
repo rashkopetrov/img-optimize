@@ -30,9 +30,6 @@ VERSION="0.21.06.24"
 SOURCE_DIR="$PWD"
 FIND_ARGS=""
 PNG_OPTIMIZATION_ARGS="-quiet"
-TIFF_OPTIMIZATION_ARGS="-quiet"
-BMP_OPTIMIZATION_ARGS="-quiet"
-GIF_OPTIMIZATION_ARGS="-quiet"
 JPG_OPTIMIZATION_ARGS="-p -o --all-progressive --quiet"
 
 CWEBP_ARGS="-quiet"
@@ -73,16 +70,6 @@ printHelp () {
     printText text "            --png-to-webp                  Convert the png images in webp"
     printText text "            --png-to-avif                  Convert the png images in avif"
     printText text "            --png-optimization-lvl <int>   Overrides the global optimization level."
-    printText nl
-    printText text "            --tiff                         Optimize all tiff images"
-    printText text "            --tiff-to-webp                 Convert the tiff images in webp"
-    printText text "            --tiff-optimization-lvl <int>  Overrides the global optimization level."
-    printText nl
-    printText text "            --gif                          Optimize all gif images"
-    printText text "            --gif-optimization-lvl <int>   Overrides the global optimization level."
-    printText nl
-    printText text "            --bmp                          Optimize all bmp images"
-    printText text "            --bmp-optimization-lvl <int>   Overrides the global optimization level."
     printText nl
     printText text "                                           Optimization settings:"
     printText text "  -s,       --strip-markers                Strip metadata when optimizing jpg/png images"
@@ -278,46 +265,6 @@ parseArgs () {
                 fi
             ;;
 
-            --tiff)
-                TIFF_OPTIMIZATION="y"
-            ;;
-
-            --tiff-to-webp)
-                TIFF_TO_WEBP="y"
-            ;;
-
-            --tiff-optimization-lvl)
-                if [ -n "$2" ] && [ "$2" -ge 0 ] && [ "$2" -le 7 ]; then
-                    TIFF_OPTIMIZATION_ARGS+=" -o$2"
-                    TIFF_OPTIMIZATION_LVL_OVERRIDE="y"
-                    shift
-                fi
-            ;;
-
-            --gif)
-                GIF_OPTIMIZATION="y"
-            ;;
-
-            --gif-optimization-lvl)
-                if [ -n "$2" ] && [ "$2" -ge 0 ] && [ "$2" -le 7 ]; then
-                    GIF_OPTIMIZATION_ARGS+=" -o$2"
-                    GIF_OPTIMIZATION_LVL_OVERRIDE="y"
-                    shift
-                fi
-            ;;
-
-            --bmp)
-                BMP_OPTIMIZATION="y"
-            ;;
-
-            --bmp-optimization-lvl)
-                if [ -n "$2" ] && [ "$2" -ge 0 ] && [ "$2" -le 7 ]; then
-                    BMP_OPTIMIZATION_ARGS+=" -o$2"
-                    BMP_OPTIMIZATION_LVL_OVERRIDE="y"
-                    shift
-                fi
-            ;;
-
             --cmin)
                 if [ -n "$2" ]; then
                     FIND_ARGS+=" -cmin \"$2\""
@@ -336,10 +283,6 @@ parseArgs () {
 
                     if [[ ! $PNG_OPTIMIZATION_LVL_OVERRIDE = 'y' ]]; then
                         PNG_OPTIMIZATION_ARGS+=" -o$2"
-                    fi
-
-                    if [[ ! $TIFF_OPTIMIZATION_LVL_OVERRIDE = 'y' ]]; then
-                        TIFF_OPTIMIZATION_ARGS+=" -o$2"
                     fi
 
                     if [[ ! $JPG_OPTIMIZATION_LVL_OVERRIDE = 'y' ]]; then
@@ -417,9 +360,9 @@ parseArgs () {
     done
 }
 
-# Usage: findImages [png|jpg|tiff|gif|bmp]
+# Usage: findImages [png|jpg]
 findImages () {
-    if [[ $1 = "png" || $1 = "tiff" || $1 = "gif" || $1 = "bmp" ]]; then
+    if [[ $1 = "png" ]]; then
         find . -type f -iname "*.$1" $FIND_ARGS
     fi
 
@@ -428,7 +371,7 @@ findImages () {
     fi
 }
 
-# Usage: optimizeImage [png|jpg|tiff] PATH
+# Usage: optimizeImage [png|jpg] PATH
 optimizeImage () {
     if [[ ! -z "$2" ]]; then
         FILE_NAME=`basename "$2"`
@@ -450,23 +393,13 @@ optimizeImage () {
                 optipng $PNG_OPTIMIZATION_ARGS $2
             fi
 
-            if [[ $1 = "tiff" ]]; then
-                optipng $TIFF_OPTIMIZATION_ARGS $2
-            fi
-
-            if [[ $1 = "gif" ]]; then
-                optipng $TIFF_OPTIMIZATION_ARGS $2
-            fi
-
-            if [[ $1 = "bmp" ]]; then
-                optipng $TIFF_OPTIMIZATION_ARGS $2
-            fi
-
             FILE_SIZE_AFTER_KB=$( bc <<< "scale=0; $(wc -c < $2)/1000" )
             FILE_SIZE_DIFFERENCE_KB=$( bc <<< "$FILE_SIZE_BEFORE_KB - $FILE_SIZE_AFTER_KB" )
+            FILE_SIZE_DIFFERENCE_PERCENT=$( bc <<< "scale=0; (100 * $FILE_SIZE_DIFFERENCE_KB) / $FILE_SIZE_BEFORE_KB" )
 
             printText text "Size (kb):"
             printText text "    before: $FILE_SIZE_BEFORE_KB    after: $FILE_SIZE_AFTER_KB    difference: $FILE_SIZE_DIFFERENCE_KB"
+            printText text "    percentage difference: $FILE_SIZE_DIFFERENCE_PERCENT"
             printText nl
         } || { # catch
             printText alertText "Err: something went wrong."
@@ -486,12 +419,9 @@ optimizeImages () {
     if [[ ! $OPTIMIZATION_LEVEL = 'y' ]]; then
         PNG_OPTIMIZATION_ARGS+=" -o2"
         JPG_OPTIMIZATION_ARGS+=" -m82"
-        TIFF_OPTIMIZATION_ARGS+=" -o2"
-        GIF_OPTIMIZATION_ARGS+=" -o2"
-        BMP_OPTIMIZATION_ARGS+=" -o2"
     fi
 
-    if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_OPTIMIZATION" = "y" || "$PNG_OPTIMIZATION" = "y" || "$TIFF_OPTIMIZATION" = "y" || "$BMP_OPTIMIZATION" = "y" || "$GIF_OPTIMIZATION" = "y" ]]; then
+    if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_OPTIMIZATION" = "y" || "$PNG_OPTIMIZATION" = "y" ]]; then
         printText text "Optimizing the images..."
         printText nl
     fi
@@ -511,33 +441,6 @@ optimizeImages () {
         IMAGES=$(findImages png)
         for IMAGE in $IMAGES; do
             optimizeImage png $IMAGE
-        done
-    fi
-
-    if [[ "$ALL_MANIPULATIONS" = "y" || "$TIFF_OPTIMIZATION" = "y" ]]; then
-        commandRequired "optipng"
-
-        IMAGES=$(findImages tiff)
-        for IMAGE in $IMAGES; do
-            optimizeImage tiff $IMAGE
-        done
-    fi
-
-    if [[ "$ALL_MANIPULATIONS" = "y" || "$BMP_OPTIMIZATION" = "y" ]]; then
-        commandRequired "optipng"
-
-        IMAGES=$(findImages bmp)
-        for IMAGE in $IMAGES; do
-            optimizeImage bmp $IMAGE
-        done
-    fi
-
-    if [[ "$ALL_MANIPULATIONS" = "y" || "$GIF_OPTIMIZATION" = "y" ]]; then
-        commandRequired "optipng"
-
-        IMAGES=$(findImages gif)
-        for IMAGE in $IMAGES; do
-            optimizeImage gif $IMAGE
         done
     fi
 }
@@ -562,9 +465,11 @@ convertImageToWebp () {
 
             FILE_SIZE_WEBP_KB=$( bc <<< "scale=0; $(wc -c < $1.webp)/1000" )
             FILE_SIZE_DIFFERENCE_KB=$( bc <<< "$FILE_SIZE_KB - $FILE_SIZE_WEBP_KB" )
+            FILE_SIZE_DIFFERENCE_PERCENT=$( bc <<< "scale=0; (100 * $FILE_SIZE_DIFFERENCE_KB) / $FILE_SIZE_KB" )
 
             printText text "Size (kb):"
             printText text "    before: $FILE_SIZE_KB    after: $FILE_SIZE_WEBP_KB    difference: $FILE_SIZE_DIFFERENCE_KB"
+            printText text "    percentage difference: $FILE_SIZE_DIFFERENCE_PERCENT"
             printText nl
         } || { # catch
             printText alertText "Err: something went wrong."
@@ -603,13 +508,6 @@ convertImagesToWebp () {
             convertImageToWebp $IMAGE
         done
     fi
-
-    if [[ "$ALL_MANIPULATIONS" = "y" || "$TIFF_TO_WEBP" = "y" ]]; then
-        IMAGES=$(findImages tiff)
-        for IMAGE in $IMAGES; do
-            convertImageToWebp $IMAGE
-        done
-    fi
 }
 
 # Usage: convertImageToAvif PATH
@@ -632,9 +530,11 @@ convertImageToAvif () {
 
             FILE_SIZE_AVIF_KB=$( bc <<< "scale=0; $(wc -c < $1.avif)/1000" )
             FILE_SIZE_DIFFERENCE_KB=$( bc <<< "$FILE_SIZE_KB - $FILE_SIZE_AVIF_KB" )
+            FILE_SIZE_DIFFERENCE_PERCENT=$( bc <<< "scale=0; (100 * $FILE_SIZE_DIFFERENCE_KB) / $FILE_SIZE_KB" )
 
             printText text "Size (kb):"
             printText text "    before: $FILE_SIZE_KB    after: $FILE_SIZE_AVIF_KB    difference: $FILE_SIZE_DIFFERENCE_KB"
+            printText text "    percentage difference: $FILE_SIZE_DIFFERENCE_PERCENT"
             printText nl
         } || { # catch
             printText alertText "Err: something went wrong."
