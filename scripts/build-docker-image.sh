@@ -18,16 +18,16 @@ while [[ -z "$ACCOUNT_NAME" ]]; do
     read -p "Enter account name: " ACCOUNT_NAME
 done
 
-read -p "Enter the image tag: " IMAGE_TAG
-while [[ -z "$IMAGE_TAG" ]]; do
-    printf "\n${RED}The image tag cannot be blank.${NC}\n"
-    read -p "Enter image tag: " IMAGE_TAG
-done
+# read -p "Enter the image tag: " IMAGE_TAG
+# while [[ -z "$IMAGE_TAG" ]]; do
+#     printf "\n${RED}The image tag cannot be blank.${NC}\n"
+#     read -p "Enter image tag: " IMAGE_TAG
+# done
 
 docker build \
     --squash \
     -f ./docker/Dockerfile \
-    -t $ACCOUNT_NAME/img-optimize:$IMAGE_TAG \
+    # -t $ACCOUNT_NAME/img-optimize:$IMAGE_TAG \
     -t $ACCOUNT_NAME/img-optimize:latest \
     .
 
@@ -35,7 +35,7 @@ read -p "Would you like to push the images to Docker Hub? [Y/n]: " -n 1 -r PUSH_
 printf "\n"
 
 if [[ $PUSH_TO_DOCKER_HUB =~ ^[Yy]$ ]]; then
-    docker push $ACCOUNT_NAME/img-optimize:$IMAGE_TAG
+    # docker push $ACCOUNT_NAME/img-optimize:$IMAGE_TAG
     docker push $ACCOUNT_NAME/img-optimize:latest
 fi
 
