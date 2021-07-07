@@ -15,6 +15,8 @@ Install the image optimization script and all requriements on your machine.
 
 The docker image contains all dependencies needed. No need to install any dependencies. You can run the script on any machine that has docker installed on it.
 
+The docker image is [here](https://hub.docker.com/r/rashkopetrovdev/img-optimize)
+
 ## Usage
 
 ```txt
