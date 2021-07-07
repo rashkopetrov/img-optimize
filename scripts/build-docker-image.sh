@@ -6,46 +6,37 @@ cd $( dirname "$SCRIPT_DIR" )
 NC="\033[0m" # No Colo
 RED="\033[0;31m"
 
-newLine () {
-	printf "\n"
-}
-
-printText () {
-	printf "$1\n"
-}
-
-printAlert () {
-	printf "${RED}$1${NC}\n"
-}
-
 [ -z "$(command -v docker)" ] && {
-	printAlert "Error: docker isn't installed"
-	printAlert "https://www.docker.com/get-started"
-	exit 1
+    printf "${RED}Error: docker isn't installed${NC}\n"
+    printf "${RED}https://www.docker.com/get-started${NC}\n"
+    exit 1
 }
 
 read -p "Enter account name in Docker Hub https://hub.docker.com/: " ACCOUNT_NAME
 while [[ -z "$ACCOUNT_NAME" ]]; do
-	printText ""
-	printAlert "Account name cannot be blank."
-	printAlert "You can type any name and that's just fine for local use."
-	read -p "Enter account name: " ACCOUNT_NAME
+    printf "\n${RED}The account name cannot be blank.${NC}\n"
+    read -p "Enter account name: " ACCOUNT_NAME
 done
 
-CURRENT_VERSION=$(cat ./VERSION | xargs)
+read -p "Enter the image tag: " IMAGE_TAG
+while [[ -z "$IMAGE_TAG" ]]; do
+    printf "\n${RED}The image tag cannot be blank.${NC}\n"
+    read -p "Enter image tag: " IMAGE_TAG
+done
 
 docker build \
-	-f ./docker/Dockerfile \
-	-t $ACCOUNT_NAME/img-optimize:$CURRENT_VERSION \
-	-t $ACCOUNT_NAME/img-optimize:latest \
-	.
+    --squash \
+    -f ./docker/Dockerfile \
+    -t $ACCOUNT_NAME/img-optimize:$IMAGE_TAG \
+    -t $ACCOUNT_NAME/img-optimize:latest \
+    .
 
 read -p "Would you like to push the images to Docker Hub? [Y/n]: " -n 1 -r PUSH_TO_DOCKER_HUB
-newLine
+printf "\n"
 
 if [[ $PUSH_TO_DOCKER_HUB =~ ^[Yy]$ ]]; then
-	docker push $ACCOUNT_NAME/img-optimize:$CURRENT_VERSION
-	docker push $ACCOUNT_NAME/img-optimize:latest
+    docker push $ACCOUNT_NAME/img-optimize:$IMAGE_TAG
+    docker push $ACCOUNT_NAME/img-optimize:latest
 fi
 
 exit 1

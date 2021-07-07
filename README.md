@@ -55,3 +55,4 @@ Examples:
 -   This script was inspired by [VirtuBox / img-optimize](https://github.com/VirtuBox/img-optimize)
 -   WebP conversion script was inspired by this [DigitalOcean Community Tutorial](https://www.digitalocean.com/community/tutorials/how-to-create-and-serve-webp-images-to-speed-up-your-website)
 -   Tutorial about webp conversion available on [jesuisadmin.fr](https://jesuisadmin.fr/convertir-vos-images-en-webp-nginx/) (in french)
+-   Article about how to build a smaller docker image [https://medium.com/@gdiener/](https://medium.com/@gdiener/how-to-build-a-smaller-docker-image-76779e18d48a)
