@@ -30,6 +30,9 @@ VERSION="0.21.06.24"
 SOURCE_DIR="$PWD"
 FIND_ARGS=""
 PNG_OPTIMIZATION_ARGS="-quiet"
+TIFF_OPTIMIZATION_ARGS="-quiet"
+BMP_OPTIMIZATION_ARGS="-quiet"
+GIF_OPTIMIZATION_ARGS="-quiet"
 JPG_OPTIMIZATION_ARGS="-p -o --all-progressive --quiet"
 
 CWEBP_ARGS="-quiet"
@@ -62,14 +65,24 @@ printHelp () {
     printText text "Options:"
     printText nl
     printText text "            --jpg                          Optimize the jpg images"
-    printText text "            --jpg-to-webp                  Convert the jpg images in webp but keeps the original files"
-    printText text "            --jpg-to-avif                  Convert the jpg images in avif but keeps the original files"
+    printText text "            --jpg-to-webp                  Convert the jpg images in webp"
+    printText text "            --jpg-to-avif                  Convert the jpg images in avif"
     printText text "            --jpg-optimization-lvl <int>   Overrides the global optimization level"
     printText nl
     printText text "            --png                          Optimize all png images"
-    printText text "            --png-to-webp                  Convert the png images in webp but keeps the original files"
-    printText text "            --png-to-avif                  Convert the png images in avif but keeps the original files"
+    printText text "            --png-to-webp                  Convert the png images in webp"
+    printText text "            --png-to-avif                  Convert the png images in avif"
     printText text "            --png-optimization-lvl <int>   Overrides the global optimization level."
+    printText nl
+    printText text "            --tiff                         Optimize all tiff images"
+    printText text "            --tiff-to-webp                 Convert the tiff images in webp"
+    printText text "            --tiff-optimization-lvl <int>  Overrides the global optimization level."
+    printText nl
+    printText text "            --gif                          Optimize all gif images"
+    printText text "            --gif-optimization-lvl <int>   Overrides the global optimization level."
+    printText nl
+    printText text "            --bmp                          Optimize all bmp images"
+    printText text "            --bmp-optimization-lvl <int>   Overrides the global optimization level."
     printText nl
     printText text "                                           Optimization settings:"
     printText text "  -s,       --strip-markers                Strip metadata when optimizing jpg/png images"
@@ -87,7 +100,7 @@ printHelp () {
     printText text "            --cmin [+|-]<n>                File's status was last changed n minutes ago"
     printText text "            --allow-concurrency            Allow running the script multiple times at the same time for"
     printText text "                                           the same directory"
-    printText text "  -a,       --all                          Optimize and convert all jpg/png images to webp/avif"
+    printText text "  -a,       --all                          Optimize and convert all images to webp/avif if possible"
     printText text "            --source-dir <string>          Define images path [default: current directory]"
     printText text "  -v,       --version                      Print version information and quit"
     printText nl
@@ -265,6 +278,46 @@ parseArgs () {
                 fi
             ;;
 
+            --tiff)
+                TIFF_OPTIMIZATION="y"
+            ;;
+
+            --tiff-to-webp)
+                TIFF_TO_WEBP="y"
+            ;;
+
+            --tiff-optimization-lvl)
+                if [ -n "$2" ] && [ "$2" -ge 0 ] && [ "$2" -le 7 ]; then
+                    TIFF_OPTIMIZATION_ARGS+=" -o$2"
+                    TIFF_OPTIMIZATION_LVL_OVERRIDE="y"
+                    shift
+                fi
+            ;;
+
+            --gif)
+                GIF_OPTIMIZATION="y"
+            ;;
+
+            --gif-optimization-lvl)
+                if [ -n "$2" ] && [ "$2" -ge 0 ] && [ "$2" -le 7 ]; then
+                    GIF_OPTIMIZATION_ARGS+=" -o$2"
+                    GIF_OPTIMIZATION_LVL_OVERRIDE="y"
+                    shift
+                fi
+            ;;
+
+            --bmp)
+                BMP_OPTIMIZATION="y"
+            ;;
+
+            --bmp-optimization-lvl)
+                if [ -n "$2" ] && [ "$2" -ge 0 ] && [ "$2" -le 7 ]; then
+                    BMP_OPTIMIZATION_ARGS+=" -o$2"
+                    BMP_OPTIMIZATION_LVL_OVERRIDE="y"
+                    shift
+                fi
+            ;;
+
             --cmin)
                 if [ -n "$2" ]; then
                     FIND_ARGS+=" -cmin \"$2\""
@@ -283,6 +336,10 @@ parseArgs () {
 
                     if [[ ! $PNG_OPTIMIZATION_LVL_OVERRIDE = 'y' ]]; then
                         PNG_OPTIMIZATION_ARGS+=" -o$2"
+                    fi
+
+                    if [[ ! $TIFF_OPTIMIZATION_LVL_OVERRIDE = 'y' ]]; then
+                        TIFF_OPTIMIZATION_ARGS+=" -o$2"
                     fi
 
                     if [[ ! $JPG_OPTIMIZATION_LVL_OVERRIDE = 'y' ]]; then
@@ -360,10 +417,10 @@ parseArgs () {
     done
 }
 
-# Usage: findImages [png|jpg]
+# Usage: findImages [png|jpg|tiff|gif|bmp]
 findImages () {
-    if [[ $1 = "png" ]]; then
-        find . -type f -iname "*.png" $FIND_ARGS
+    if [[ $1 = "png" || $1 = "tiff" || $1 = "gif" || $1 = "bmp" ]]; then
+        find . -type f -iname "*.$1" $FIND_ARGS
     fi
 
     if [[ $1 = "jpg" ]]; then
@@ -371,7 +428,7 @@ findImages () {
     fi
 }
 
-# Usage: optimizeImage [png|jpg] PATH
+# Usage: optimizeImage [png|jpg|tiff] PATH
 optimizeImage () {
     if [[ ! -z "$2" ]]; then
         FILE_NAME=`basename "$2"`
@@ -391,6 +448,18 @@ optimizeImage () {
 
             if [[ $1 = "png" ]]; then
                 optipng $PNG_OPTIMIZATION_ARGS $2
+            fi
+
+            if [[ $1 = "tiff" ]]; then
+                optipng $TIFF_OPTIMIZATION_ARGS $2
+            fi
+
+            if [[ $1 = "gif" ]]; then
+                optipng $TIFF_OPTIMIZATION_ARGS $2
+            fi
+
+            if [[ $1 = "bmp" ]]; then
+                optipng $TIFF_OPTIMIZATION_ARGS $2
             fi
 
             FILE_SIZE_AFTER_KB=$( bc <<< "scale=0; $(wc -c < $2)/1000" )
@@ -417,9 +486,12 @@ optimizeImages () {
     if [[ ! $OPTIMIZATION_LEVEL = 'y' ]]; then
         PNG_OPTIMIZATION_ARGS+=" -o2"
         JPG_OPTIMIZATION_ARGS+=" -m82"
+        TIFF_OPTIMIZATION_ARGS+=" -o2"
+        GIF_OPTIMIZATION_ARGS+=" -o2"
+        BMP_OPTIMIZATION_ARGS+=" -o2"
     fi
 
-    if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_OPTIMIZATION" = "y" || "$PNG_OPTIMIZATION" = "y" ]]; then
+    if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_OPTIMIZATION" = "y" || "$PNG_OPTIMIZATION" = "y" || "$TIFF_OPTIMIZATION" = "y" || "$BMP_OPTIMIZATION" = "y" || "$GIF_OPTIMIZATION" = "y" ]]; then
         printText text "Optimizing the images..."
         printText nl
     fi
@@ -439,6 +511,33 @@ optimizeImages () {
         IMAGES=$(findImages png)
         for IMAGE in $IMAGES; do
             optimizeImage png $IMAGE
+        done
+    fi
+
+    if [[ "$ALL_MANIPULATIONS" = "y" || "$TIFF_OPTIMIZATION" = "y" ]]; then
+        commandRequired "optipng"
+
+        IMAGES=$(findImages tiff)
+        for IMAGE in $IMAGES; do
+            optimizeImage tiff $IMAGE
+        done
+    fi
+
+    if [[ "$ALL_MANIPULATIONS" = "y" || "$BMP_OPTIMIZATION" = "y" ]]; then
+        commandRequired "optipng"
+
+        IMAGES=$(findImages bmp)
+        for IMAGE in $IMAGES; do
+            optimizeImage bmp $IMAGE
+        done
+    fi
+
+    if [[ "$ALL_MANIPULATIONS" = "y" || "$GIF_OPTIMIZATION" = "y" ]]; then
+        commandRequired "optipng"
+
+        IMAGES=$(findImages gif)
+        for IMAGE in $IMAGES; do
+            optimizeImage gif $IMAGE
         done
     fi
 }
@@ -486,7 +585,7 @@ convertImagesToWebp () {
     CWEBP_ARGS+=" -q $CWEBP_QUALITY_FACTOR"
 
     if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_WEBP" = "y" || "$PNG_TO_WEBP" = "y"  ]]; then
-        printText text "Converting the images to cwebp..."
+        printText text "Converting the images to webp..."
         commandRequired "cwebp"
         printText nl
     fi
@@ -500,6 +599,13 @@ convertImagesToWebp () {
 
     if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_TO_WEBP" = "y" ]]; then
         IMAGES=$(findImages png)
+        for IMAGE in $IMAGES; do
+            convertImageToWebp $IMAGE
+        done
+    fi
+
+    if [[ "$ALL_MANIPULATIONS" = "y" || "$TIFF_TO_WEBP" = "y" ]]; then
+        IMAGES=$(findImages tiff)
         for IMAGE in $IMAGES; do
             convertImageToWebp $IMAGE
         done
