@@ -85,7 +85,7 @@ git push rashkopetrovdev/img-optimize:stretch-slim-0.21.06.24
 git push rashkopetrovdev/img-optimize:latest
 ```
 
-### Create alias to simplify the process
+## Create an alias to simplify the process
 
 ```bash
 echo "alias optimize='docker run -v \$(pwd):/workdir {docker image} {script argument}'" >> $HOME/.bashrc
