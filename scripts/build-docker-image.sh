@@ -27,9 +27,9 @@ done
 docker build \
     --squash \
     -f ./docker/Dockerfile \
-    # -t $ACCOUNT_NAME/img-optimize:$IMAGE_TAG \
     -t $ACCOUNT_NAME/img-optimize:latest \
     .
+    # -t $ACCOUNT_NAME/img-optimize:$IMAGE_TAG \
 
 read -p "Would you like to push the images to Docker Hub? [Y/n]: " -n 1 -r PUSH_TO_DOCKER_HUB
 printf "\n"
