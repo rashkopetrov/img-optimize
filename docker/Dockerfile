@@ -3,7 +3,8 @@ FROM debian:stretch-slim
 COPY ./scripts/install-dependencies.sh /root/install-dependencies.sh
 RUN chmod +x /root/install-dependencies.sh && \
 	/root/install-dependencies.sh && \
-	rm /root/install-dependencies.sh
+	rm /root/install-dependencies.sh && \
+	rm -rf /var/cache/apt/*
 
 COPY ./docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
