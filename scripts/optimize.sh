@@ -27,7 +27,7 @@
 # majorVersion.year.month.day
 VERSION="0.21.06.24"
 
-TARGET_DIR="$PWD"
+SOURCE_DIR="$PWD"
 FIND_ARGS=""
 PNG_OPTIMIZATION_ARGS="-quiet"
 JPG_OPTIMIZATION_ARGS="-p -o --all-progressive --quiet"
@@ -48,6 +48,56 @@ YELLOW="\033[1;33m"
 # ===========================================
 	# Helpers/Utils
 # ===========================================
+
+printCopyright () {
+	printText text "Optimize v$VERSION Copyright (c) 2021, Rashko Petrov"
+	printText nl
+}
+
+printHelp () {
+	printText text "Usage: optimize [OPTIONS]..."
+	printText text "Optimize/Compress images quality and size."
+	printText text "A wrapper around other tools and optimization services that simplifies the process."
+	printText nl
+	printText text "Options:"
+	printText nl
+	printText text "            --jpg                          Optimize the jpg images"
+	printText text "            --jpg-to-webp                  Convert the jpg images in webp but keeps the original files"
+	printText text "            --jpg-to-avif                  Convert the jpg images in avif but keeps the original files"
+	printText text "            --jpg-optimization-lvl <int>   Overrides the global optimization level"
+	printText nl
+	printText text "            --png                          Optimize all png images"
+	printText text "            --png-to-webp                  Convert the png images in webp but keeps the original files"
+	printText text "            --png-to-avif                  Convert the png images in avif but keeps the original files"
+	printText text "            --png-optimization-lvl <int>   Overrides the global optimization level."
+	printText nl
+	printText text "                                           Optimization settings:"
+	printText text "  -s,       --strip-markers                Strip metadata when optimizing jpg/png images"
+	printText text "  -o <int>, --optimization-lvl <int>       Optimization level (0-7) [default: 2]"
+	printText nl
+	printText text "                                           WEBP settings:"
+	printText text "            --webp-quality-factor <int>    Quality factor (0:small..100:big), [default: 82]"
+	printText text "            --webp-lossless-preset <int>   Activates lossless preset with given level in [default: 9]"
+	printText text "                                           (0:fast..9:slowest)"
+	printText nl
+	printText text "                                           AVIF settings (The Next-Gen Compression Codec):"
+	printText text "            --avif-compression-level <int> Compression level (0..63), [default: 25]"
+	printText text "            --avif-compression-speed <int> Compression speed (0..8), [default: 4]"
+	printText nl
+	printText text "            --cmin [+|-]<n>                File's status was last changed n minutes ago"
+	printText text "            --allow-concurrency            Allow running the script multiple times at the same time for"
+	printText text "                                           the same directory"
+	printText text "  -a,       --all                          Optimize and convert all jpg/png images to webp/avif"
+	printText text "            --source-dir <string>          Define images path [default: current directory]"
+	printText text "  -v,       --version                      Print version information and quit"
+	printText nl
+	printText text "Examples:"
+	printText text "  optimize                                 Prints the help text"
+	printText text "  optimize --help                          Prints the help text"
+	printText text "  optimize --png --jpg --strip-markers     Optimizes all png and jpg in current directory"
+	printText text "  optimize --png --source-dir ./dir/images Optimizes all png in given directory"
+	return 0
+}
 
 printText () {
 	case "$1" in
@@ -101,54 +151,6 @@ commandRequired () {
 	}
 }
 
-printCopyright () {
-	printText text "Optimize v$VERSION Copyright (c) 2021, Rashko Petrov"
-	printText nl
-}
-
-printHelp () {
-	printText text "Usage: optimize [OPTIONS].... [PATH]"
-	printText text "Optimize/Compress images quality and size."
-	printText text "A wrapper around other tools and optimization services that simplifies the process."
-	printText nl
-	printText text "Options:"
-	printText nl
-	printText text "            --jpg                          Optimize the jpg images"
-	printText text "            --jpg-to-webp                  Convert the jpg images in webp but keeps the original files"
-	printText text "            --jpg-to-avif                  Convert the jpg images in avif but keeps the original files"
-	printText text "            --jpg-optimization-lvl <int>   Overrides the global optimization level"
-	printText nl
-	printText text "            --png                          Optimize all png images"
-	printText text "            --png-to-webp                  Convert the png images in webp but keeps the original files"
-	printText text "            --png-to-avif                  Convert the png images in avif but keeps the original files"
-	printText text "            --png-optimization-lvl <int>   Overrides the global optimization level."
-	printText nl
-	printText text "                                           Optimization settings:"
-	printText text "  -s,       --strip-markers                Strip metadata when optimizing jpg/png images"
-	printText text "  -o <int>, --optimization-lvl <int>       Optimization level (0-7) [default: 2]"
-	printText nl
-	printText text "                                           WEBP settings:"
-	printText text "            --webp-quality-factor <int>    Quality factor (0:small..100:big), [default: 82]"
-	printText text "            --webp-lossless-preset <int>   Activates lossless preset with given level in [default: 9]"
-	printText text "                                           (0:fast..9:slowest)"
-	printText nl
-	printText text "                                           AVIF settings (The Next-Gen Compression Codec):"
-	printText text "            --avif-compression-level <int> Compression level (0..63), [default: 25]"
-	printText text "            --avif-compression-speed <int> Compression speed (0..8), [default: 4]"
-	printText nl
-	printText text "            --cmin [+|-]<n>                File's status was last changed n minutes ago"
-	printText text "  -a,       --all                          Optimize and convert all jpg/png images to webp/avif"
-	printText text "  -p,       --path <images path>           Define images path [default: current directory]"
-	printText text "  -v,       --version                      Print version information and quit"
-	printText text "  -u,       --check-for-update             Check for updates"
-	printText nl
-	printText text "Examples:"
-	printText text "  optimize                                 Prints the help text"
-	printText text "  optimize --help                          Prints the help text"
-	printText text "  optimize --png --jpg --strip-markers     Optimizes all png and jpg in current durectory"
-	return 0
-}
-
 # ===========================================
 	# Implementation
 # ===========================================
@@ -161,10 +163,12 @@ run () {
 		exit 1
 	fi
 
-	preventMultiExecutionOnSameDirectory
 	parseArgs "$@"
+	cd $SOURCE_DIR || exit 1
 
-	cd $TARGET_DIR || exit 1
+	if [[ ! "$ALL_CONCURRENCY" = "y" ]]; then
+		preventMultiExecutionOnSameDirectory
+	fi
 
 	optimizeImages
 	convertImagesToWebp
@@ -178,12 +182,12 @@ run () {
 }
 
 preventMultiExecutionOnSameDirectory () {
-	LOCK_FILE=$(echo -n "$TARGET_DIR" | md5sum | cut -d" " -f1)
+	LOCK_FILE=$(echo -n "$SOURCE_DIR" | md5sum | cut -d" " -f1)
 
 	if [ -f "/tmp/$LOCK_FILE" ]; then
 		printText nl
 		printText alert "The script is currently processing the given path:"
-		printText alert "    $TARGET_DIR"
+		printText alert "    $SOURCE_DIR"
 		printText nl
 
 		printText notice "The script creates file that indicates it's running."
@@ -213,12 +217,6 @@ preventMultiExecutionOnSameDirectoryReset () {
 	fi
 }
 
-checkForUpdates () {
-	printText noticeSep
-	printText notice "Check for update is not implemented yet."
-	printText noticeSep
-}
-
 parseArgs () {
 	while [ "$#" -gt 0 ]; do
 		case "$1" in
@@ -236,7 +234,7 @@ parseArgs () {
 
 			--jpg-optimization-lvl)
 				if [ -n "$2" ] && [ "$2" -ge 0 ] && [ "$2" -le 7 ]; then
-					JPG_OPTIMIZATION_QUALITY=$(((8 - $2) * 14))
+					JPG_OPTIMIZATION_QUALITY=$(bc <<< "(8 - $2) * 14")
 					if [ "$JPG_OPTIMIZATION_QUALITY" -ge 100 ]; then
 						JPG_OPTIMIZATION_QUALITY=100
 					fi
@@ -288,14 +286,13 @@ parseArgs () {
 					fi
 
 					if [[ ! $JPG_OPTIMIZATION_LVL_OVERRIDE = 'y' ]]; then
-						JPG_OPTIMIZATION_QUALITY=$(((8 - $2) * 14))
+						JPG_OPTIMIZATION_QUALITY=$(bc <<< "(8 - $2) * 14")
 						if [ "$JPG_OPTIMIZATION_QUALITY" -ge 100 ]; then
 							JPG_OPTIMIZATION_QUALITY=100
 						fi
 
 						JPG_OPTIMIZATION_ARGS+=" -m$JPG_OPTIMIZATION_QUALITY"
 					fi
-
 					shift
 				fi
 			;;
@@ -328,13 +325,17 @@ parseArgs () {
 				fi
 			;;
 
+			--allow-concurrency)
+				ALL_CONCURRENCY="y"
+			;;
+
 			-a | --all)
 				ALL_MANIPULATIONS="y"
 			;;
 
-			-p | --path)
+			--source-dir)
 				if [ -n "$2" ]; then
-					IMG_PATH="$2"
+					SOURCE_DIR="$2"
 					shift
 				fi
 			;;
@@ -348,11 +349,6 @@ parseArgs () {
 				printText $VERSION
 				exit 1
 			;;
-
-			-u | --check-for-update)
-				checkForUpdates
-				exit 1
-			;;
 		*)
 
 		printText alert "Error! Unknown option '$1'."
@@ -364,6 +360,7 @@ parseArgs () {
 	done
 }
 
+# Usage: findImages [png|jpg]
 findImages () {
 	if [[ $1 = "png" ]]; then
 		find . -type f -iname "*.png" $FIND_ARGS
@@ -374,6 +371,7 @@ findImages () {
 	fi
 }
 
+# Usage: optimizeImage [png|jpg] PATH
 optimizeImage () {
 	if [[ ! -z "$2" ]]; then
 		FILE_NAME=`basename "$2"`
@@ -416,14 +414,19 @@ optimizeImage () {
 }
 
 optimizeImages () {
-	printText text "Optimizing the images..."
-
 	if [[ ! $OPTIMIZATION_LEVEL = 'y' ]]; then
 		PNG_OPTIMIZATION_ARGS+=" -o2"
 		JPG_OPTIMIZATION_ARGS+=" -m82"
 	fi
 
+	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_OPTIMIZATION" = "y" || "$PNG_OPTIMIZATION" = "y" ]]; then
+		printText text "Optimizing the images..."
+		printText nl
+	fi
+
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_OPTIMIZATION" = "y" ]]; then
+		commandRequired "jpegoptim"
+
 		IMAGES=$(findImages jpg)
 		for IMAGE in $IMAGES; do
 			optimizeImage jpg $IMAGE
@@ -431,6 +434,8 @@ optimizeImages () {
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$PNG_OPTIMIZATION" = "y" ]]; then
+		commandRequired "optipng"
+
 		IMAGES=$(findImages png)
 		for IMAGE in $IMAGES; do
 			optimizeImage png $IMAGE
@@ -438,6 +443,7 @@ optimizeImages () {
 	fi
 }
 
+# Usage: convertImageToWebp PATH
 convertImageToWebp () {
 	if [[ ! -z "$1" ]]; then
 		FILE_NAME=`basename "$1"`
@@ -481,6 +487,8 @@ convertImagesToWebp () {
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_WEBP" = "y" || "$PNG_TO_WEBP" = "y"  ]]; then
 		printText text "Converting the images to cwebp..."
+		commandRequired "cwebp"
+		printText nl
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_WEBP" = "y" ]]; then
@@ -498,6 +506,7 @@ convertImagesToWebp () {
 	fi
 }
 
+# Usage: convertImageToAvif PATH
 convertImageToAvif () {
 	if [[ ! -z "$1" ]]; then
 		FILE_NAME=`basename "$1"`
@@ -541,6 +550,8 @@ convertImagesToAvif () {
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_AVIF" = "y" || "$PNG_TO_AVIF" = "y" ]]; then
 		printText text "Converting the images to avif..."
+		commandRequired "avif"
+		printText nl
 	fi
 
 	if [[ "$ALL_MANIPULATIONS" = "y" || "$JPG_TO_AVIF" = "y" ]]; then
@@ -564,11 +575,6 @@ convertImagesToAvif () {
 
 clear
 printCopyright
-
-commandRequired "jpegoptim"
-commandRequired "optipng"
-commandRequired "cwebp"
-commandRequired "avif"
 commandRequired "bc"
 
 run "$@"
