@@ -1,6 +1,9 @@
 # Image optimization bash script
 
-This script optimizes the images quality and size. It's a wrapper around other tools and optimization services that simplifies the process.
+Script that:
+
+-   optimizes the images by reducing their size and quality
+-   converts the images to webp and avif
 
 The idea for this script is taken from [VirtuBox / img-optimize](https://github.com/VirtuBox/img-optimize). The script, however, is built from the ground up based on my personal needs and views.
 
@@ -20,34 +23,57 @@ Use the image optimization script with docker image. No need to install any depe
 username@pc# optimize --help
 Optimize v0.21.06.24 Copyright (c) 2021, Rashko Petrov
 
-Usage: optimize [OPTIONS].... [PATH]
+Usage: optimize [OPTIONS]...
 Optimize/Compress images quality and size.
+A wrapper around other tools and optimization services that simplifies the process.
 
 Options:
 
-           --jpg                        Optimize the jpg images.
-           --jpg-to-webp                Convert the jpg images in webp but keeps the original files.
-           --jpg-to-avif                Convert the jpg images in avif but keeps the original files.
-           --jpg-optimization-lvl <ol>  Overrides the global optimization level.
+            --jpg                          Optimize the jpg images
+            --jpg-to-webp                  Convert the jpg images in webp
+            --jpg-to-avif                  Convert the jpg images in avif
+            --jpg-optimization-lvl <int>   Overrides the global optimization level
 
-           --png                        Optimize all png images.
-           --png-to-webp                Convert the png images in webp but keeps the original files.
-           --png-to-avif                Convert the png images in avif but keeps the original files.
-           --png-optimization-lvl <ol>  Overrides the global optimization level.
+            --png                          Optimize all png images
+            --png-to-webp                  Convert the png images in webp
+            --png-to-avif                  Convert the png images in avif
+            --png-optimization-lvl <int>   Overrides the global optimization level.
 
-           --cmin [+|-]<n>              File's status was last changed n minutes ago.
-  -q,      --quiet                      Run optimization quietly.
-  -s,      --strip-markers              Strip metadata when optimizing jpg/png images.
-  -o <ol>, --optimization-lvl <ol>      Optimization level (0-7) [default: 2].
-  -a,      --all                        Optimize and convert all jpg/png images to webp/avif.
-  -p,      --path <images path>         Define images path [default: current directory].
-  -v,      --version                    Print version information and quit.
-  -u,      --check-for-update           Check for updates.
+            --tiff                         Optimize all tiff images
+            --tiff-to-webp                 Convert the tiff images in webp
+            --tiff-optimization-lvl <int>  Overrides the global optimization level.
+
+            --gif                          Optimize all gif images
+            --gif-optimization-lvl <int>   Overrides the global optimization level.
+
+            --bmp                          Optimize all bmp images
+            --bmp-optimization-lvl <int>   Overrides the global optimization level.
+
+                                           Optimization settings:
+  -s,       --strip-markers                Strip metadata when optimizing jpg/png images
+  -o <int>, --optimization-lvl <int>       Optimization level (0-7) [default: 2]
+
+                                           WEBP settings:
+            --webp-quality-factor <int>    Quality factor (0:small..100:big), [default: 82]
+            --webp-lossless-preset <int>   Activates lossless preset with given level in [default: 9]
+                                           (0:fast..9:slowest)
+
+                                           AVIF settings (The Next-Gen Compression Codec):
+            --avif-compression-level <int> Compression level (0..63), [default: 25]
+            --avif-compression-speed <int> Compression speed (0..8), [default: 4]
+
+            --cmin [+|-]<n>                File's status was last changed n minutes ago
+            --allow-concurrency            Allow running the script multiple times at the same time for
+                                           the same directory
+  -a,       --all                          Optimize and convert all images to webp/avif if possible
+            --source-dir <string>          Define images path [default: current directory]
+  -v,       --version                      Print version information and quit
 
 Examples:
-  optimize              Prints the help text
-  optimize --png --jpg  Optimizes all png and jpg in current durectory
-
+  optimize                                 Prints the help text
+  optimize --help                          Prints the help text
+  optimize --png --jpg --strip-markers     Optimizes all png and jpg in current directory
+  optimize --png --source-dir ./dir/images Optimizes all png in given directory
 ```
 
 ## Credits
