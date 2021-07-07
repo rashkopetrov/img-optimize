@@ -28,24 +28,14 @@ A wrapper around other tools and optimization services that simplifies the proce
 Options:
 
             --jpg                          Optimize the jpg images
-            --jpg-to-webp                  Convert the jpg images in webp
-            --jpg-to-avif                  Convert the jpg images in avif
+            --jpg-to-webp                  Convert the jpg images in webp but keeps the original files
+            --jpg-to-avif                  Convert the jpg images in avif but keeps the original files
             --jpg-optimization-lvl <int>   Overrides the global optimization level
 
             --png                          Optimize all png images
-            --png-to-webp                  Convert the png images in webp
-            --png-to-avif                  Convert the png images in avif
+            --png-to-webp                  Convert the png images in webp but keeps the original files
+            --png-to-avif                  Convert the png images in avif but keeps the original files
             --png-optimization-lvl <int>   Overrides the global optimization level.
-
-            --tiff                         Optimize all tiff images
-            --tiff-to-webp                 Convert the tiff images in webp
-            --tiff-optimization-lvl <int>  Overrides the global optimization level.
-
-            --gif                          Optimize all gif images
-            --gif-optimization-lvl <int>   Overrides the global optimization level.
-
-            --bmp                          Optimize all bmp images
-            --bmp-optimization-lvl <int>   Overrides the global optimization level.
 
                                            Optimization settings:
   -s,       --strip-markers                Strip metadata when optimizing jpg/png images
@@ -63,7 +53,7 @@ Options:
             --cmin [+|-]<n>                File's status was last changed n minutes ago
             --allow-concurrency            Allow running the script multiple times at the same time for
                                            the same directory
-  -a,       --all                          Optimize and convert all images to webp/avif if possible
+  -a,       --all                          Optimize and convert all jpg/png images to webp/avif
             --source-dir <string>          Define images path [default: current directory]
   -v,       --version                      Print version information and quit
 
